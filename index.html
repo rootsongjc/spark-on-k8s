@@ -7,15 +7,12 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title>{{ page.title }} - Spark {{site.SPARK_VERSION_SHORT}} Documentation</title>
-        {% if page.description %}
-          <meta name="description" content="{{page.description | replace: 'SPARK_VERSION_SHORT', site.SPARK_VERSION_SHORT}}">
-        {% endif %}
+        <title>Apache Spark on Kubernetes - Spark 2.1.0 Documentation</title>
+        
+          <meta name="description" content="Apache Spark on Kubernetes 用户文档">
+        
 
-        {% if page.redirect %}
-          <meta http-equiv="refresh" content="0; url={{page.redirect}}">
-          <link rel="canonical" href="{{page.redirect}}" />
-        {% endif %}
+        
 
         <link rel="stylesheet" href="css/bootstrap.min.css">
         <style>
@@ -44,43 +41,46 @@
             <div class="navbar-inner">
                 <div class="container">
                     <div class="brand"><a href="index.html">
-                      <img src="img/spark-logo-hd.png" style="height:50px;"/></a><span class="version">{{site.SPARK_VERSION_SHORT}}</span>
+                      <img src="img/spark-logo-hd.png" style="height:50px;"/></a><span class="version">2.1.0</span>
                     </div>
                     <ul class="nav">
                         <!--TODO(andyk): Add class="active" attribute to li some how.-->
                         <li><a href="index.html">Overview</a></li>
                     </ul>
-                    <!--<p class="navbar-text pull-right"><span class="version-text">v{{site.SPARK_VERSION_SHORT}}</span></p>-->
+                    <!--<p class="navbar-text pull-right"><span class="version-text">v2.1.0</span></p>-->
                 </div>
             </div>
         </div>
 
         <div class="container-wrapper">
 
-            {% if page.url contains "/ml" %}
-                {% include nav-left-wrapper-ml.html nav-mllib=site.data.menu-mllib nav-ml=site.data.menu-ml %}
-                <input id="nav-trigger" class="nav-trigger" checked type="checkbox">
-                <label for="nav-trigger"></label>
-                <div class="content-with-sidebar" id="content">
-                    {% if page.displayTitle %}
-                        <h1 class="title">{{ page.displayTitle }}</h1>
-                    {% else %}
-                        <h1 class="title">{{ page.title }}</h1>
-                    {% endif %}
-
-                    {{ content }}
-
-                </div>
-            {% else %}
+            
                 <div class="content" id="content">
-                    {% if page.displayTitle %}
-                        <h1 class="title">{{ page.displayTitle }}</h1>
-                    {% else %}
-                        <h1 class="title">{{ page.title }}</h1>
-                    {% endif %}
-                    {{ content | toc }}
+                    
+                        <h1 class="title">Apache Spark on Kubernetes</h1>
+                    
+                    <h3 id="概览">概览</h3>
+
+<p>本网页是使用 Kubernetes 原生调度的 Apache Spark 用户文档。</p>
+
+<p>GitHub repo：<a href="https://github.com/apache-spark-on-k8s/spark">apache-spark-on-k8s/spark</a> ，直接从 Apache Spark 的官方 GitHub repo 中 fork 而来。</p>
+
+<h3 id="缘起">缘起</h3>
+
+<p>见 <a href="https://issues.apache.org/jira/browse/SPARK-18278">SPARK-18278</a>。</p>
+
+<p>这个 Issue 的目标是将 kubernetes 作为 spark 的原生调度器，跟 spark 的其他调度后台如 Standalone、Mesos、Yarn 是平级的。</p>
+
+<h3 id="内容">内容</h3>
+
+<ul>
+  <li><a href="./running-on-kubernetes.html">在 Kubernetes 上运行 Spark</a></li>
+  <li><a href="./running-on-kubernetes-cloud.html">在云环境上运行 Spark</a></li>
+  <li><a href="./contribute.html">贡献说明</a></li>
+</ul>
+
                 </div>
-            {% endif %}
+            
              <!-- /container -->
         </div>
 

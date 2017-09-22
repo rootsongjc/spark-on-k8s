@@ -1,36 +1,95 @@
----
-layout: global
-title: Running Spark on Kubernetes
----
 
-Support for running on [Kubernetes](https://kubernetes.io/docs/whatisk8s/) is available in experimental status. The
-feature set is currently limited and not well-tested. This should not be used in production environments.
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Running Spark on Kubernetes - Spark 2.1.0 Documentation</title>
+        
 
-## Prerequisites
+        
 
-* You must have a running Kubernetes cluster with access configured to it
-using [kubectl](https://kubernetes.io/docs/user-guide/prereqs/). If you do not already have a working Kubernetes
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+            }
+        </style>
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+
+        <link rel="stylesheet" href="css/pygments-default.css">
+
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+        <![endif]-->
+
+        <!-- This code is taken from http://twitter.github.com/bootstrap/examples/hero.html -->
+
+        <div class="navbar navbar-fixed-top" id="topbar">
+            <div class="navbar-inner">
+                <div class="container">
+                    <div class="brand"><a href="index.html">
+                      <img src="img/spark-logo-hd.png" style="height:50px;"/></a><span class="version">2.1.0</span>
+                    </div>
+                    <ul class="nav">
+                        <!--TODO(andyk): Add class="active" attribute to li some how.-->
+                        <li><a href="index.html">Overview</a></li>
+                    </ul>
+                    <!--<p class="navbar-text pull-right"><span class="version-text">v2.1.0</span></p>-->
+                </div>
+            </div>
+        </div>
+
+        <div class="container-wrapper">
+
+            
+                <div class="content" id="content">
+                    
+                        <h1 class="title">Running Spark on Kubernetes</h1>
+                    
+                    <p>Support for running on <a href="https://kubernetes.io/docs/whatisk8s/">Kubernetes</a> is available in experimental status. The
+feature set is currently limited and not well-tested. This should not be used in production environments.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<ul>
+  <li>You must have a running Kubernetes cluster with access configured to it
+using <a href="https://kubernetes.io/docs/user-guide/prereqs/">kubectl</a>. If you do not already have a working Kubernetes
 cluster, you may setup a test cluster on your local machine using
-[minikube](https://kubernetes.io/docs/getting-started-guides/minikube/).
-  * We recommend that minikube be updated to the most recent version (0.19.0 at the time of this documentation), as some
-  earlier versions may not start up the kubernetes cluster with all the necessary components.
-* You must have appropriate permissions to create and list [pods](https://kubernetes.io/docs/user-guide/pods/),
-[ConfigMaps](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/) and
-[secrets](https://kubernetes.io/docs/concepts/configuration/secret/) in your cluster. You can verify that
-you can list these resources by running `kubectl get pods` `kubectl get configmap`, and `kubectl get secrets` which
-should give you a list of pods and configmaps (if any) respectively.
-* You must have a spark distribution with Kubernetes support. This may be obtained from the
-[release tarball](https://github.com/apache-spark-on-k8s/spark/releases) or by
-[building Spark with Kubernetes support](https://github.com/apache-spark-on-k8s/spark/blob/branch-2.2-kubernetes/resource-managers/kubernetes/README.md#building-spark-with-kubernetes-support).
+<a href="https://kubernetes.io/docs/getting-started-guides/minikube/">minikube</a>.
+    <ul>
+      <li>We recommend that minikube be updated to the most recent version (0.19.0 at the time of this documentation), as some
+earlier versions may not start up the kubernetes cluster with all the necessary components.</li>
+    </ul>
+  </li>
+  <li>You must have appropriate permissions to create and list <a href="https://kubernetes.io/docs/user-guide/pods/">pods</a>,
+<a href="https://kubernetes.io/docs/tasks/configure-pod-container/configmap/">ConfigMaps</a> and
+<a href="https://kubernetes.io/docs/concepts/configuration/secret/">secrets</a> in your cluster. You can verify that
+you can list these resources by running <code>kubectl get pods</code> <code>kubectl get configmap</code>, and <code>kubectl get secrets</code> which
+should give you a list of pods and configmaps (if any) respectively.</li>
+  <li>You must have a spark distribution with Kubernetes support. This may be obtained from the
+<a href="https://github.com/apache-spark-on-k8s/spark/releases">release tarball</a> or by
+<a href="https://github.com/apache-spark-on-k8s/spark/blob/branch-2.2-kubernetes/resource-managers/kubernetes/README.md#building-spark-with-kubernetes-support">building Spark with Kubernetes support</a>.</li>
+</ul>
 
-## Driver & Executor Images
+<h2 id="driver--executor-images">Driver &amp; Executor Images</h2>
 
-Kubernetes requires users to supply images that can be deployed into containers within pods. The images are built to
+<p>Kubernetes requires users to supply images that can be deployed into containers within pods. The images are built to
 be run in a container runtime environment that Kubernetes supports. Docker is a container runtime environment that is
-frequently used with Kubernetes, so Spark provides some support for working with Docker to get started quickly.
+frequently used with Kubernetes, so Spark provides some support for working with Docker to get started quickly.</p>
 
-If you wish to use pre-built docker images, you may use the images published in
-[kubespark](https://hub.docker.com/u/kubespark/). The images are as follows:
+<p>If you wish to use pre-built docker images, you may use the images published in
+<a href="https://hub.docker.com/u/kubespark/">kubespark</a>. The images are as follows:</p>
 
 <table class="table">
 <tr><th>Component</th><th>Image</th></tr>
@@ -60,249 +119,259 @@ If you wish to use pre-built docker images, you may use the images published in
 </tr>
 </table>
 
-You may also build these docker images from sources, or customize them as required. Spark distributions include the
-Docker files for the driver, executor, and init-container at `dockerfiles/driver/Dockerfile`,
-`dockerfiles/executor/Dockerfile`, and `dockerfiles/init-container/Dockerfile` respectively. Use these Docker files to
+<p>You may also build these docker images from sources, or customize them as required. Spark distributions include the
+Docker files for the driver, executor, and init-container at <code>dockerfiles/driver/Dockerfile</code>,
+<code>dockerfiles/executor/Dockerfile</code>, and <code>dockerfiles/init-container/Dockerfile</code> respectively. Use these Docker files to
 build the Docker images, and then tag them with the registry that the images should be sent to. Finally, push the images
-to the registry.
+to the registry.</p>
 
-For example, if the registry host is `registry-host` and the registry is listening on port 5000:
+<p>For example, if the registry host is <code>registry-host</code> and the registry is listening on port 5000:</p>
 
-    cd $SPARK_HOME
-    docker build -t registry-host:5000/spark-driver:latest -f dockerfiles/driver/Dockerfile .
-    docker build -t registry-host:5000/spark-executor:latest -f dockerfiles/executor/Dockerfile .
-    docker build -t registry-host:5000/spark-init:latest -f dockerfiles/init-container/Dockerfile .
-    docker push registry-host:5000/spark-driver:latest
-    docker push registry-host:5000/spark-executor:latest
-    docker push registry-host:5000/spark-init:latest
+<pre><code>cd $SPARK_HOME
+docker build -t registry-host:5000/spark-driver:latest -f dockerfiles/driver/Dockerfile .
+docker build -t registry-host:5000/spark-executor:latest -f dockerfiles/executor/Dockerfile .
+docker build -t registry-host:5000/spark-init:latest -f dockerfiles/init-container/Dockerfile .
+docker push registry-host:5000/spark-driver:latest
+docker push registry-host:5000/spark-executor:latest
+docker push registry-host:5000/spark-init:latest
+</code></pre>
 
-## Submitting Applications to Kubernetes
+<h2 id="submitting-applications-to-kubernetes">Submitting Applications to Kubernetes</h2>
 
-Kubernetes applications can be executed via `spark-submit`. For example, to compute the value of pi, assuming the images
-are set up as described above:
+<p>Kubernetes applications can be executed via <code>spark-submit</code>. For example, to compute the value of pi, assuming the images
+are set up as described above:</p>
 
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --class org.apache.spark.examples.SparkPi \
-      --master k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port> \
-      --kubernetes-namespace default \
-      --conf spark.executor.instances=5 \
-      --conf spark.app.name=spark-pi \
-      --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-      local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://https://&lt;k8s-apiserver-host&gt;:&lt;k8s-apiserver-port&gt; \
+  --kubernetes-namespace default \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
+</code></pre>
 
-The Spark master, specified either via passing the `--master` command line argument to `spark-submit` or by setting
-`spark.master` in the application's configuration, must be a URL with the format `k8s://<api_server_url>`. Prefixing the
-master string with `k8s://` will cause the Spark application to launch on the Kubernetes cluster, with the API server
-being contacted at `api_server_url`. If no HTTP protocol is specified in the URL, it defaults to `https`. For example,
-setting the master to `k8s://example.com:443` is equivalent to setting it to `k8s://https://example.com:443`, but to
-connect without TLS on a different port, the master would be set to `k8s://http://example.com:8443`.
+<p>The Spark master, specified either via passing the <code>--master</code> command line argument to <code>spark-submit</code> or by setting
+<code>spark.master</code> in the application&#8217;s configuration, must be a URL with the format <code>k8s://&lt;api_server_url&gt;</code>. Prefixing the
+master string with <code>k8s://</code> will cause the Spark application to launch on the Kubernetes cluster, with the API server
+being contacted at <code>api_server_url</code>. If no HTTP protocol is specified in the URL, it defaults to <code>https</code>. For example,
+setting the master to <code>k8s://example.com:443</code> is equivalent to setting it to <code>k8s://https://example.com:443</code>, but to
+connect without TLS on a different port, the master would be set to <code>k8s://http://example.com:8443</code>.</p>
 
-If you have a Kubernetes cluster setup, one way to discover the apiserver URL is by executing `kubectl cluster-info`.
+<p>If you have a Kubernetes cluster setup, one way to discover the apiserver URL is by executing <code>kubectl cluster-info</code>.</p>
 
-    > kubectl cluster-info
-    Kubernetes master is running at http://127.0.0.1:8080
+<pre><code>&gt; kubectl cluster-info
+Kubernetes master is running at http://127.0.0.1:8080
+</code></pre>
 
-In the above example, the specific Kubernetes cluster can be used with spark submit by specifying
-`--master k8s://http://127.0.0.1:8080` as an argument to spark-submit.
+<p>In the above example, the specific Kubernetes cluster can be used with spark submit by specifying
+<code>--master k8s://http://127.0.0.1:8080</code> as an argument to spark-submit.</p>
 
-Note that applications can currently only be executed in cluster mode, where the driver and its executors are running on
-the cluster.
+<p>Note that applications can currently only be executed in cluster mode, where the driver and its executors are running on
+the cluster.</p>
 
-Finally, notice that in the above example we specify a jar with a specific URI with a scheme of `local://`. This URI is
-the location of the example jar that is already in the Docker image. Using dependencies that are on your machine's local
-disk is discussed below.
+<p>Finally, notice that in the above example we specify a jar with a specific URI with a scheme of <code>local://</code>. This URI is
+the location of the example jar that is already in the Docker image. Using dependencies that are on your machine&#8217;s local
+disk is discussed below.</p>
 
-## Python Support 
+<h2 id="python-support">Python Support</h2>
 
-With the ever growing support for Python by data scientists, we have supported the submission of PySpark applications.
+<p>With the ever growing support for Python by data scientists, we have supported the submission of PySpark applications.
 These applications follow the general syntax that you would expect from other cluster managers. The submission of a PySpark
 job is similar to the submission of Java/Scala applications except you do not supply a class, as expected. 
-Here is how you would execute a Spark-Pi example:
+Here is how you would execute a Spark-Pi example:</p>
 
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --master k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port> \
-      --kubernetes-namespace <k8s-namespace> \
-      --conf spark.executor.instances=5 \
-      --conf spark.app.name=spark-pi \
-      --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-      --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar \
-      local:///opt/spark/examples/src/main/python/pi.py 10
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --master k8s://https://&lt;k8s-apiserver-host&gt;:&lt;k8s-apiserver-port&gt; \
+  --kubernetes-namespace &lt;k8s-namespace&gt; \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar \
+  local:///opt/spark/examples/src/main/python/pi.py 10
+</code></pre>
 
-With Python support it is expected to distribute `.egg`, `.zip` and `.py` libraries to executors via the `--py-files` option. 
-We support this as well, as seen with the following example:
-    
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --master k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port> \
-      --kubernetes-namespace <k8s-namespace> \
-      --conf spark.executor.instances=5 \
-      --conf spark.app.name=spark-pi \
-      --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-      --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar \
-      --py-files local:///opt/spark/examples/src/main/python/sort.py \
-      local:///opt/spark/examples/src/main/python/pi.py 10
+<p>With Python support it is expected to distribute <code>.egg</code>, <code>.zip</code> and <code>.py</code> libraries to executors via the <code>--py-files</code> option. 
+We support this as well, as seen with the following example:</p>
 
-      
-You may also customize your Docker images to use different `pip` packages that suit your use-case. As you can see
-with the current `driver-py` Docker image we have commented out the current pip module support that you can uncomment
-to use:
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --master k8s://https://&lt;k8s-apiserver-host&gt;:&lt;k8s-apiserver-port&gt; \
+  --kubernetes-namespace &lt;k8s-namespace&gt; \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar \
+  --py-files local:///opt/spark/examples/src/main/python/sort.py \
+  local:///opt/spark/examples/src/main/python/pi.py 10
+</code></pre>
 
-    ...
-    ADD examples /opt/spark/examples
-    ADD python /opt/spark/python
-    
-    RUN apk add --no-cache python && \
-        python -m ensurepip && \
-        rm -r /usr/lib/python*/ensurepip && \
-        pip install --upgrade pip setuptools && \
-        rm -r /root/.cache
-    # UNCOMMENT THE FOLLOWING TO START PIP INSTALLING PYTHON PACKAGES
-    # RUN apk add --update alpine-sdk python-dev
-    # RUN pip install numpy
-    ...
+<p>You may also customize your Docker images to use different <code>pip</code> packages that suit your use-case. As you can see
+with the current <code>driver-py</code> Docker image we have commented out the current pip module support that you can uncomment
+to use:</p>
 
-And bake into your docker image whichever PySpark files you wish to include by merely appending to the following exec
-command with your appropriate file (i.e. MY_SPARK_FILE)
+<pre><code>...
+ADD examples /opt/spark/examples
+ADD python /opt/spark/python
 
-    ...
-    CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" && \
-        if ! [ -z ${SPARK_MOUNTED_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_MOUNTED_CLASSPATH:$SPARK_CLASSPATH"; fi && \
-        if ! [ -z ${SPARK_SUBMIT_EXTRA_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_SUBMIT_EXTRA_CLASSPATH:$SPARK_CLASSPATH"; fi && \
-        if ! [ -z ${SPARK_EXTRA_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_EXTRA_CLASSPATH:$SPARK_CLASSPATH"; fi && \
-        if ! [ -z ${SPARK_MOUNTED_FILES_DIR} ]; then cp -R "$SPARK_MOUNTED_FILES_DIR/." .; fi && \
-        exec /sbin/tini -- ${JAVA_HOME}/bin/java $SPARK_DRIVER_JAVA_OPTS -cp $SPARK_CLASSPATH \
-        -Xms$SPARK_DRIVER_MEMORY -Xmx$SPARK_DRIVER_MEMORY \
-        $SPARK_DRIVER_CLASS $PYSPARK_PRIMARY MY_PYSPARK_FILE,$PYSPARK_FILES $SPARK_DRIVER_ARGS
-      
+RUN apk add --no-cache python &amp;&amp; \
+    python -m ensurepip &amp;&amp; \
+    rm -r /usr/lib/python*/ensurepip &amp;&amp; \
+    pip install --upgrade pip setuptools &amp;&amp; \
+    rm -r /root/.cache
+# UNCOMMENT THE FOLLOWING TO START PIP INSTALLING PYTHON PACKAGES
+# RUN apk add --update alpine-sdk python-dev
+# RUN pip install numpy
+...
+</code></pre>
 
-## Dependency Management
+<p>And bake into your docker image whichever PySpark files you wish to include by merely appending to the following exec
+command with your appropriate file (i.e. MY_SPARK_FILE)</p>
 
-Application dependencies that are being submitted from your machine need to be sent to a **resource staging server**
+<pre><code>...
+CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" &amp;&amp; \
+    if ! [ -z ${SPARK_MOUNTED_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_MOUNTED_CLASSPATH:$SPARK_CLASSPATH"; fi &amp;&amp; \
+    if ! [ -z ${SPARK_SUBMIT_EXTRA_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_SUBMIT_EXTRA_CLASSPATH:$SPARK_CLASSPATH"; fi &amp;&amp; \
+    if ! [ -z ${SPARK_EXTRA_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_EXTRA_CLASSPATH:$SPARK_CLASSPATH"; fi &amp;&amp; \
+    if ! [ -z ${SPARK_MOUNTED_FILES_DIR} ]; then cp -R "$SPARK_MOUNTED_FILES_DIR/." .; fi &amp;&amp; \
+    exec /sbin/tini -- ${JAVA_HOME}/bin/java $SPARK_DRIVER_JAVA_OPTS -cp $SPARK_CLASSPATH \
+    -Xms$SPARK_DRIVER_MEMORY -Xmx$SPARK_DRIVER_MEMORY \
+    $SPARK_DRIVER_CLASS $PYSPARK_PRIMARY MY_PYSPARK_FILE,$PYSPARK_FILES $SPARK_DRIVER_ARGS
+</code></pre>
+
+<h2 id="dependency-management">Dependency Management</h2>
+
+<p>Application dependencies that are being submitted from your machine need to be sent to a <strong>resource staging server</strong>
 that the driver and executor can then communicate with to retrieve those dependencies. A YAML file denoting a minimal
-set of Kubernetes resources that runs this service is located in the file `conf/kubernetes-resource-staging-server.yaml`.
+set of Kubernetes resources that runs this service is located in the file <code>conf/kubernetes-resource-staging-server.yaml</code>.
 This YAML file configures a Deployment with one pod running the resource staging server configured with a ConfigMap,
 and exposes the server through a Service with a fixed NodePort. Deploying a resource staging server with the included
-YAML file requires you to have permissions to create Deployments, Services, and ConfigMaps.
+YAML file requires you to have permissions to create Deployments, Services, and ConfigMaps.</p>
 
-To run the resource staging server with default configurations, the Kubernetes resources can be created:
+<p>To run the resource staging server with default configurations, the Kubernetes resources can be created:</p>
 
-    kubectl create -f conf/kubernetes-resource-staging-server.yaml
+<pre><code>kubectl create -f conf/kubernetes-resource-staging-server.yaml
+</code></pre>
 
-and then you can compute the value of Pi as follows:
+<p>and then you can compute the value of Pi as follows:</p>
 
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --class org.apache.spark.examples.SparkPi \
-      --master k8s://<k8s-apiserver-host>:<k8s-apiserver-port> \
-      --kubernetes-namespace default \
-      --conf spark.executor.instances=5 \
-      --conf spark.app.name=spark-pi \
-      --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.resourceStagingServer.uri=http://<address-of-any-cluster-node>:31000 \
-      examples/jars/spark_examples_2.11-2.2.0.jar
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://&lt;k8s-apiserver-host&gt;:&lt;k8s-apiserver-port&gt; \
+  --kubernetes-namespace default \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.resourceStagingServer.uri=http://&lt;address-of-any-cluster-node&gt;:31000 \
+  examples/jars/spark_examples_2.11-2.2.0.jar
+</code></pre>
 
-The Docker image for the resource staging server may also be built from source, in a similar manner to the driver
-and executor images. The Dockerfile is provided in `dockerfiles/resource-staging-server/Dockerfile`.
+<p>The Docker image for the resource staging server may also be built from source, in a similar manner to the driver
+and executor images. The Dockerfile is provided in <code>dockerfiles/resource-staging-server/Dockerfile</code>.</p>
 
-The provided YAML file specifically sets the NodePort to 31000 on the service's specification. If port 31000 is not
-available on any of the nodes of your cluster, you should remove the NodePort field from the service's specification
+<p>The provided YAML file specifically sets the NodePort to 31000 on the service&#8217;s specification. If port 31000 is not
+available on any of the nodes of your cluster, you should remove the NodePort field from the service&#8217;s specification
 and allow the Kubernetes cluster to determine the NodePort itself. Be sure to provide the correct port in the resource
-staging server URI when submitting your application, in accordance to the NodePort chosen by the Kubernetes cluster.
+staging server URI when submitting your application, in accordance to the NodePort chosen by the Kubernetes cluster.</p>
 
-### Dependency Management Without The Resource Staging Server
+<h3 id="dependency-management-without-the-resource-staging-server">Dependency Management Without The Resource Staging Server</h3>
 
-Note that this resource staging server is only required for submitting local dependencies. If your application's
+<p>Note that this resource staging server is only required for submitting local dependencies. If your application&#8217;s
 dependencies are all hosted in remote locations like HDFS or http servers, they may be referred to by their appropriate
 remote URIs. Also, application dependencies can be pre-mounted into custom-built Docker images. Those dependencies
-can be added to the classpath by referencing them with `local://` URIs and/or setting the `SPARK_EXTRA_CLASSPATH`
-environment variable in your Dockerfiles.
+can be added to the classpath by referencing them with <code>local://</code> URIs and/or setting the <code>SPARK_EXTRA_CLASSPATH</code>
+environment variable in your Dockerfiles.</p>
 
-### Accessing Kubernetes Clusters
+<h3 id="accessing-kubernetes-clusters">Accessing Kubernetes Clusters</h3>
 
-Spark-submit also supports submission through the
-[local kubectl proxy](https://kubernetes.io/docs/user-guide/accessing-the-cluster/#using-kubectl-proxy). One can use the
-authenticating proxy to communicate with the api server directly without passing credentials to spark-submit.
+<p>Spark-submit also supports submission through the
+<a href="https://kubernetes.io/docs/user-guide/accessing-the-cluster/#using-kubectl-proxy">local kubectl proxy</a>. One can use the
+authenticating proxy to communicate with the api server directly without passing credentials to spark-submit.</p>
 
-The local proxy can be started by running:
+<p>The local proxy can be started by running:</p>
 
-    kubectl proxy
+<pre><code>kubectl proxy
+</code></pre>
 
-If our local proxy were listening on port 8001, we would have our submission looking like the following:
+<p>If our local proxy were listening on port 8001, we would have our submission looking like the following:</p>
 
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --class org.apache.spark.examples.SparkPi \
-      --master k8s://http://127.0.0.1:8001 \
-      --kubernetes-namespace default \
-      --conf spark.executor.instances=5 \
-      --conf spark.app.name=spark-pi \
-      --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-      local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://http://127.0.0.1:8001 \
+  --kubernetes-namespace default \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
+</code></pre>
 
-Communication between Spark and Kubernetes clusters is performed using the fabric8 kubernetes-client library.
-The above mechanism using `kubectl proxy` can be used when we have authentication providers that the fabric8
+<p>Communication between Spark and Kubernetes clusters is performed using the fabric8 kubernetes-client library.
+The above mechanism using <code>kubectl proxy</code> can be used when we have authentication providers that the fabric8
 kubernetes-client library does not support. Authentication using X509 Client Certs and OAuth tokens
-is currently supported.
+is currently supported.</p>
 
-## Dynamic Executor Scaling
+<h2 id="dynamic-executor-scaling">Dynamic Executor Scaling</h2>
 
-Spark on Kubernetes supports Dynamic Allocation with cluster mode. This mode requires running
-an external shuffle service. This is typically a [daemonset](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-with a provisioned [hostpath](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath) volume.
+<p>Spark on Kubernetes supports Dynamic Allocation with cluster mode. This mode requires running
+an external shuffle service. This is typically a <a href="https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/">daemonset</a>
+with a provisioned <a href="https://kubernetes.io/docs/concepts/storage/volumes/#hostpath">hostpath</a> volume.
 This shuffle service may be shared by executors belonging to different SparkJobs. Using Spark with dynamic allocation
-on Kubernetes assumes that a cluster administrator has set up one or more shuffle-service daemonsets in the cluster.
+on Kubernetes assumes that a cluster administrator has set up one or more shuffle-service daemonsets in the cluster.</p>
 
-A sample configuration file is provided in `conf/kubernetes-shuffle-service.yaml` which can be customized as needed
-for a particular cluster. It is important to note that `spec.template.metadata.labels` are setup appropriately for the shuffle
+<p>A sample configuration file is provided in <code>conf/kubernetes-shuffle-service.yaml</code> which can be customized as needed
+for a particular cluster. It is important to note that <code>spec.template.metadata.labels</code> are setup appropriately for the shuffle
 service because there may be multiple shuffle service instances running in a cluster. The labels give Spark applications
-a way to target a particular shuffle service.
+a way to target a particular shuffle service.</p>
 
-For example, if the shuffle service we want to use is in the default namespace, and
-has pods with labels `app=spark-shuffle-service` and `spark-version=2.1.0`, we can
+<p>For example, if the shuffle service we want to use is in the default namespace, and
+has pods with labels <code>app=spark-shuffle-service</code> and <code>spark-version=2.1.0</code>, we can
 use those tags to target that particular shuffle service at job launch time. In order to run a job with dynamic allocation enabled,
-the command may then look like the following:
+the command may then look like the following:</p>
 
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --class org.apache.spark.examples.GroupByTest \
-      --master k8s://<k8s-master>:<port> \
-      --kubernetes-namespace default \
-      --conf spark.app.name=group-by-test \
-      --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:latest \
-      --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:latest \
-      --conf spark.dynamicAllocation.enabled=true \
-      --conf spark.shuffle.service.enabled=true \
-      --conf spark.kubernetes.shuffle.namespace=default \
-      --conf spark.kubernetes.shuffle.labels="app=spark-shuffle-service,spark-version=2.1.0" \
-      local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar 10 400000 2
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.GroupByTest \
+  --master k8s://&lt;k8s-master&gt;:&lt;port&gt; \
+  --kubernetes-namespace default \
+  --conf spark.app.name=group-by-test \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:latest \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:latest \
+  --conf spark.dynamicAllocation.enabled=true \
+  --conf spark.shuffle.service.enabled=true \
+  --conf spark.kubernetes.shuffle.namespace=default \
+  --conf spark.kubernetes.shuffle.labels="app=spark-shuffle-service,spark-version=2.1.0" \
+  local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar 10 400000 2
+</code></pre>
 
-## Advanced
+<h2 id="advanced">Advanced</h2>
 
-### Securing the Resource Staging Server with TLS
+<h3 id="securing-the-resource-staging-server-with-tls">Securing the Resource Staging Server with TLS</h3>
 
-The default configuration of the resource staging server is not secured with TLS. It is highly recommended to configure
-this to protect the secrets and jars/files being submitted through the staging server.
+<p>The default configuration of the resource staging server is not secured with TLS. It is highly recommended to configure
+this to protect the secrets and jars/files being submitted through the staging server.</p>
 
-The YAML file in `conf/kubernetes-resource-staging-server.yaml` includes a ConfigMap resource that holds the resource
-staging server's configuration. The properties can be adjusted here to make the resource staging server listen over TLS.
-Refer to the [security](security.html) page for the available settings related to TLS. The namespace for the
-resource staging server is `kubernetes.resourceStagingServer`, so for example the path to the server's keyStore would
-be set by `spark.ssl.kubernetes.resourceStagingServer.keyStore`.
+<p>The YAML file in <code>conf/kubernetes-resource-staging-server.yaml</code> includes a ConfigMap resource that holds the resource
+staging server&#8217;s configuration. The properties can be adjusted here to make the resource staging server listen over TLS.
+Refer to the <a href="security.html">security</a> page for the available settings related to TLS. The namespace for the
+resource staging server is <code>kubernetes.resourceStagingServer</code>, so for example the path to the server&#8217;s keyStore would
+be set by <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>.</p>
 
-In addition to the settings specified by the previously linked security page, the resource staging server supports the
-following additional configurations:
+<p>In addition to the settings specified by the previously linked security page, the resource staging server supports the
+following additional configurations:</p>
 
 <table class="table">
 <tr><th>Property Name</th><th>Default</th><th>Meaning</th></tr>
@@ -344,36 +413,37 @@ following additional configurations:
 </tr>
 </table>
 
-Note that while the properties can be set in the ConfigMap, you will still need to consider the means of mounting the
-appropriate secret files into the resource staging server's container. A common mechanism that is used for this is
-to use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) that are mounted as secret
-volumes. Refer to the appropriate Kubernetes documentation for guidance and adjust the resource staging server's
-specification in the provided YAML file accordingly.
+<p>Note that while the properties can be set in the ConfigMap, you will still need to consider the means of mounting the
+appropriate secret files into the resource staging server&#8217;s container. A common mechanism that is used for this is
+to use <a href="https://kubernetes.io/docs/concepts/configuration/secret/">Kubernetes secrets</a> that are mounted as secret
+volumes. Refer to the appropriate Kubernetes documentation for guidance and adjust the resource staging server&#8217;s
+specification in the provided YAML file accordingly.</p>
 
-Finally, when you submit your application, you must specify either a trustStore or a PEM-encoded certificate file to
+<p>Finally, when you submit your application, you must specify either a trustStore or a PEM-encoded certificate file to
 communicate with the resource staging server over TLS. The trustStore can be set with
-`spark.ssl.kubernetes.resourceStagingServer.trustStore`, or a certificate file can be set with
-`spark.ssl.kubernetes.resourceStagingServer.clientCertPem`. For example, our SparkPi example now looks like this:
+<code>spark.ssl.kubernetes.resourceStagingServer.trustStore</code>, or a certificate file can be set with
+<code>spark.ssl.kubernetes.resourceStagingServer.clientCertPem</code>. For example, our SparkPi example now looks like this:</p>
 
-    bin/spark-submit \
-      --deploy-mode cluster \
-      --class org.apache.spark.examples.SparkPi \
-      --master k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port> \
-      --kubernetes-namespace default \
-      --conf spark.executor.instances=5 \
-      --conf spark.app.name=spark-pi \
-      --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-      --conf spark.kubernetes.resourceStagingServer.uri=https://<address-of-any-cluster-node>:31000 \
-      --conf spark.ssl.kubernetes.resourceStagingServer.enabled=true \
-      --conf spark.ssl.kubernetes.resourceStagingServer.clientCertPem=/home/myuser/cert.pem \
-      examples/jars/spark_examples_2.11-2.2.0.jar
+<pre><code>bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://https://&lt;k8s-apiserver-host&gt;:&lt;k8s-apiserver-port&gt; \
+  --kubernetes-namespace default \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.resourceStagingServer.uri=https://&lt;address-of-any-cluster-node&gt;:31000 \
+  --conf spark.ssl.kubernetes.resourceStagingServer.enabled=true \
+  --conf spark.ssl.kubernetes.resourceStagingServer.clientCertPem=/home/myuser/cert.pem \
+  examples/jars/spark_examples_2.11-2.2.0.jar
+</code></pre>
 
-### Spark Properties
+<h3 id="spark-properties">Spark Properties</h3>
 
-Below are some other common properties that are specific to Kubernetes. Most of the other configurations are the same
-from the other deployment modes. See the [configuration page](configuration.html) for more information on those.
+<p>Below are some other common properties that are specific to Kubernetes. Most of the other configurations are the same
+from the other deployment modes. See the <a href="configuration.html">configuration page</a> for more information on those.</p>
 
 <table class="table">
 <tr><th>Property Name</th><th>Default</th><th>Meaning</th></tr>
@@ -691,20 +761,20 @@ from the other deployment modes. See the [configuration page](configuration.html
 </tr>
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.internal.trustStorePassword</code></td>
-  <td>Value of <code><code>spark.ssl.kubernetes.resourceStagingServer.trustStorePassword</code></td>
+  <td>Value of <code><code>spark.ssl.kubernetes.resourceStagingServer.trustStorePassword</code>&lt;/td&gt;
   <td>
     Password of the trustStore file that is used when communicating with the resource staging server over TLS, as
     init-containers bootstrap the driver and executor pods with submitted local dependencies.
   </td>
-</tr>
+&lt;/tr&gt;
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.internal.trustStoreType</code></td>
-  <td>Value of <code><code>spark.ssl.kubernetes.resourceStagingServer.trustStoreType</code></td>
+  <td>Value of <code><code>spark.ssl.kubernetes.resourceStagingServer.trustStoreType</code>&lt;/td&gt;
   <td>
     Type of the trustStore file that is used when communicating with the resource staging server over TLS, when
     init-containers bootstrap the driver and executor pods with submitted local dependencies.
   </td>
-</tr>
+&lt;/tr&gt;
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.internal.clientCertPem</code></td>
   <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.clientCertPem</code></td>
@@ -786,7 +856,7 @@ from the other deployment modes. See the [configuration page](configuration.html
      the Driver process. The user can specify multiple of these to set multiple environment variables.
    </td>
  </tr>
-</table>
+&lt;/table&gt;
 
 
 ## Current Limitations
@@ -795,3 +865,45 @@ Running Spark on Kubernetes is currently an experimental feature. Some restricti
 should be lifted in the future include:
 * Applications can only run in cluster mode.
 * Only Scala, Java, and Python applications can be run.
+</code></td></tr></code></td></tr></table>
+
+                </div>
+            
+             <!-- /container -->
+        </div>
+
+        <script src="js/vendor/jquery-1.8.0.min.js"></script>
+        <script src="js/vendor/bootstrap.min.js"></script>
+        <script src="js/vendor/anchor.min.js"></script>
+        <script src="js/main.js"></script>
+
+        <!-- MathJax Section -->
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                TeX: { equationNumbers: { autoNumber: "AMS" } }
+            });
+        </script>
+        <script>
+            // Note that we load MathJax this way to work with local file (file://), HTTP and HTTPS.
+            // We could use "//cdn.mathjax...", but that won't support "file://".
+            (function(d, script) {
+                script = d.createElement('script');
+                script.type = 'text/javascript';
+                script.async = true;
+                script.onload = function(){
+                    MathJax.Hub.Config({
+                        tex2jax: {
+                            inlineMath: [ ["$", "$"], ["\\\\(","\\\\)"] ],
+                            displayMath: [ ["$$","$$"], ["\\[", "\\]"] ],
+                            processEscapes: true,
+                            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+                        }
+                    });
+                };
+                script.src = ('https:' == document.location.protocol ? 'https://' : 'http://') +
+                    'cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+                d.getElementsByTagName('head')[0].appendChild(script);
+            }(document));
+        </script>
+    </body>
+</html>
