@@ -1,0 +1,5 @@
+# Jekyll website output
+_site
+
+# Deploy to Github Pages
+deploy.sh
