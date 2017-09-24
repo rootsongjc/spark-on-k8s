@@ -23,7 +23,7 @@ title: 在 Kubernetes 上运行 Spark
 如果您想要用已经提前编译好的 docker 镜像，可以使用 docker hub 中的镜像：[kubespark](https://hub.docker.com/u/kubespark/) 如下：
 
 <table class="table">
-<tr><th>Component</th><th>Image</th></tr>
+<tr><th>组件</th><th>镜像</th></tr>
 <tr>
   <td>Spark Driver Image</td>
   <td><code>kubespark/spark-driver:v2.1.0-kubernetes-0.3.1</code></td>
@@ -56,7 +56,7 @@ title: 在 Kubernetes 上运行 Spark
 
 - Spark-submit 提交任务时不支持指定 kubernetes 的 serviceaccount，当 kubernetes 集群启用了 RBAC 的时候，将会出现权限错误。
 
-------
+### 构建镜像
 
 您也可以根据需要定制化您的镜像，然后自行编译成 docker 镜像。在我们的 spark release 的 `dockerfiles` 目录中也包含了 Dockerfile 文件。
 
@@ -85,7 +85,7 @@ title: 在 Kubernetes 上运行 Spark
 
 例如，加入您的镜像仓库地址是 `registry-host` 监听端口为 5000，可以使用下面的额命令编译和 push 镜像：
 
-```
+```bash
 cd $SPARK_HOME
 docker build -t registry-host:5000/spark-driver:latest -f dockerfiles/driver/Dockerfile .
 docker build -t registry-host:5000/spark-executor:latest -f dockerfiles/executor/Dockerfile .
@@ -99,10 +99,9 @@ docker push registry-host:5000/spark-init:latest
 
 ## 向kubernetes提交任务
 
-Kubernetes applications can be executed via `spark-submit`. For example, to compute the value of pi, assuming the images
-are set up as described above:
+使用 `spark-submit` 向 kubernetes 中提交 spark 任务。例如，使用上文列举的镜像，提交一个 spark pi 计算任务的命令如下：
 
-```
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --class org.apache.spark.examples.SparkPi \
@@ -116,38 +115,28 @@ bin/spark-submit \
   local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
 ```
 
-The Spark master, specified either via passing the `--master` command line argument to `spark-submit` or by setting
-`spark.master` in the application's configuration, must be a URL with the format `k8s://<api_server_url>`. Prefixing the
-master string with `k8s://` will cause the Spark application to launch on the Kubernetes cluster, with the API server
-being contacted at `api_server_url`. If no HTTP protocol is specified in the URL, it defaults to `https`. For example,
-setting the master to `k8s://example.com:443` is equivalent to setting it to `k8s://https://example.com:443`, but to
-connect without TLS on a different port, the master would be set to `k8s://http://example.com:8443`.
+可以在 `spark-submit` 命令行中使用 `--master` 来指定 spark master，也可以在应用程序的配置中设置 `spark.master` 的地址，但是 URL 必须按照这种格式 `k8s://<api_server_url>`。使用 `k8s://` 前缀指定向 kubernetes 集群上提交 spark 任务， API server 的地址是 `api_server_url`。如果不指定 HTTP 协议的话默认使用的是 `https`。例如指定 master 为 `k8s://example.com:443` ，等效于 `k8s://https://example.com:443`，如果您是用的是未启用 TLS 的其他端口，master 地址应该这样指定： `k8s://http://example.com:8443`.
 
-If you have a Kubernetes cluster setup, one way to discover the apiserver URL is by executing `kubectl cluster-info`.
+使用该的命令来确定 API server 的地址： `kubectl cluster-info`。
 
-```
+```bash
 > kubectl cluster-info
 Kubernetes master is running at http://127.0.0.1:8080
 ```
 
-In the above example, the specific Kubernetes cluster can be used with spark submit by specifying
-`--master k8s://http://127.0.0.1:8080` as an argument to spark-submit.
+对于该集群可以使用使用该地址提及任务：`--master k8s://http://127.0.0.1:8080`
 
-Note that applications can currently only be executed in cluster mode, where the driver and its executors are running on
-the cluster.
+目前 spark driver 和 executor 都只能在 cluster mode 下运行，全部都作为 pod 运行在 kubernetes 集群中。
 
-Finally, notice that in the above example we specify a jar with a specific URI with a scheme of `local://`. This URI is
-the location of the example jar that is already in the Docker image. Using dependencies that are on your machine's local
-disk is discussed below.
+**注意：**在上面的提交命令中我们使用 `local://` 格式指定了一个 jar 文件，这个 **local** 的实际意义是该 jar 文件位于 docker 镜像的某个目录下，而不是您提交任务的那台主机的某个目录下的 jar 文件。如何提交本地的 jar 文件将在下文的 **依赖管理** 中讨论。
 
 ## Python 支持
 
-With the ever growing support for Python by data scientists, we have supported the submission of PySpark applications.
-These applications follow the general syntax that you would expect from other cluster managers. The submission of a PySpark
-job is similar to the submission of Java/Scala applications except you do not supply a class, as expected. 
+随着 Python 在数据科学领域的广泛应用，我们增加了 PySpark 的支持。
+These applications follow the general syntax that you would expect from other cluster managers. The submission of a PySpark job is similar to the submission of Java/Scala applications except you do not supply a class, as expected. 
 Here is how you would execute a Spark-Pi example:
 
-```
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --master k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port> \
@@ -162,10 +151,9 @@ bin/spark-submit \
 ```
 
 With Python support it is expected to distribute `.egg`, `.zip` and `.py` libraries to executors via the `--py-files` option. 
-We support this as well, as seen with the following example:
-​    
+​We support this as well, as seen with the following example:   
 
-```
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --master k8s://https://<k8s-apiserver-host>:<k8s-apiserver-port> \
@@ -180,11 +168,9 @@ bin/spark-submit \
   local:///opt/spark/examples/src/main/python/pi.py 10
 ```
 
-You may also customize your Docker images to use different `pip` packages that suit your use-case. As you can see
-with the current `driver-py` Docker image we have commented out the current pip module support that you can uncomment
-to use:
+You may also customize your Docker images to use different `pip` packages that suit your use-case. As you can see with the current `driver-py` Docker image we have commented out the current pip module support that you can uncomment to use:
 
-```
+```dockerfile
 ...
 ADD examples /opt/spark/examples
 ADD python /opt/spark/python
@@ -200,10 +186,9 @@ RUN apk add --no-cache python && \
 ...
 ```
 
-And bake into your docker image whichever PySpark files you wish to include by merely appending to the following exec
-command with your appropriate file (i.e. MY_SPARK_FILE)
+And bake into your docker image whichever PySpark files you wish to include by merely appending to the following exec command with your appropriate file (i.e. MY_SPARK_FILE)
 
-```
+```dockerfile
 ...
 CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" && \
     if ! [ -z ${SPARK_MOUNTED_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_MOUNTED_CLASSPATH:$SPARK_CLASSPATH"; fi && \
@@ -219,18 +204,19 @@ CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" && \
 
 我们这里所说的依赖管理主要是指 Jar 包的依赖管理。
 
-Application dependencies that are being submitted from your machine need to be sent to a **resource staging server** that the driver and executor can then communicate with to retrieve those dependencies. A YAML file denoting a minimal set of Kubernetes resources that runs this service is located in the file `conf/kubernetes-resource-staging-server.yaml`.
-This YAML file configures a Deployment with one pod running the resource staging server configured with a ConfigMap, and exposes the server through a Service with a fixed NodePort. Deploying a resource staging server with the included YAML file requires you to have permissions to create Deployments, Services, and ConfigMaps.
+应用程序以来需要从你的本机提交到 **resource staging server**，这样 driver 和 executor 才能从中获取依赖的文件。运行 resource staging server 的 YAML 文件可以在这里找到： `conf/kubernetes-resource-staging-server.yaml`。
 
-To run the resource staging server with default configurations, the Kubernetes resources can be created:
+该 YAML 文件中定义个只运行一个 resource staging server pod 的 Deployment 对象，同时挂载了一个 ConfigMap，然后定义了一个 service 通过 NodePort 的方式暴露到集群外部。
+
+使用默认的配置创建一个 resource staging server：
 
 ```
 kubectl create -f conf/kubernetes-resource-staging-server.yaml
 ```
 
-and then you can compute the value of Pi as follows:
+这样你就可以在 `spark-submit` 命令中指定使用 `--conf spark.kubernetes.resourceStagingServer.uri` 参数来指定 resource staging server 的地址了：
 
-```
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --class org.apache.spark.examples.SparkPi \
@@ -245,27 +231,27 @@ bin/spark-submit \
   examples/jars/spark_examples_2.11-2.2.0.jar
 ```
 
-The Docker image for the resource staging server may also be built from source, in a similar manner to the driver and executor images. The Dockerfile is provided in `dockerfiles/resource-staging-server/Dockerfile`.
+Resource staging server 的镜像您也可以通过 Dockerfile 来从源码构建： `dockerfiles/resource-staging-server/Dockerfile`。
 
-The provided YAML file specifically sets the NodePort to 31000 on the service's specification. If port 31000 is not available on any of the nodes of your cluster, you should remove the NodePort field from the service's specification and allow the Kubernetes cluster to determine the NodePort itself. Be sure to provide the correct port in the resource staging server URI when submitting your application, in accordance to the NodePort chosen by the Kubernetes cluster.
+我们在上面的命令中使用了 NodePort 将 service 暴露到集群外部，请确保集群上宿主机的 Node 节点的 31000 端口没有被占用，如果该端口被占用就换一个其他端口，您可以通过任何一个 node 节点加上 31000 端口即可访问到 resource staging server。
 
 ### 不使用 Resource Staging Server 做依赖管理
 
-Note that this resource staging server is only required for submitting local dependencies. If your application's dependencies are all hosted in remote locations like HDFS or http servers, they may be referred to by their appropriate remote URIs. Also, application dependencies can be pre-mounted into custom-built Docker images. Those dependencies can be added to the classpath by referencing them with `local://` URIs and/or setting the `SPARK_EXTRA_CLASSPATH` environment variable in your Dockerfiles.
+仅当您需要提交本地依赖文件的时候才需要用到 resource staging server，如果您的应用程序依赖全部托管在远程比如 HDFS 或者 http server 的时候就不需要用到它。当然您可以把这些依赖编译到 docker 镜像里面，然后在执行 `spark-submit` 的时候通过 `local://` 指定依赖的文件或者在 Dockerfile 中设置 `SPARK_EXTRA_CLASSPATH` 环境变量。
 
 ### 访问 Kubernetes 集群
 
-Spark-submit also supports submission through the [local kubectl proxy](https://kubernetes.io/docs/user-guide/accessing-the-cluster/#using-kubectl-proxy). One can use the authenticating proxy to communicate with the api server directly without passing credentials to spark-submit.
+还可以通过 [local kubectl proxy](https://kubernetes.io/docs/user-guide/accessing-the-cluster/#using-kubectl-proxy) 执行 spark-submit。可以使用 proxy 来直接跟 API server 交互而不用给 spark-submit 传递认证信息。
 
-The local proxy can be started by running:
+启动本地的 proxy：
 
-```
+```bash
 kubectl proxy
 ```
 
-If our local proxy were listening on port 8001, we would have our submission looking like the following:
+如果您的本地 proxy 监听 8001 端口，我们像这样提交任务：
 
-```
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --class org.apache.spark.examples.SparkPi \
@@ -279,8 +265,9 @@ bin/spark-submit \
   local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
 ```
 
-Communication between Spark and Kubernetes clusters is performed using the fabric8 kubernetes-client library.
-The above mechanism using `kubectl proxy` can be used when we have authentication providers that the fabric8 kubernetes-client library does not support. Authentication using X509 Client Certs and OAuth tokens is currently supported.
+Spark 跟 Kubernetes 集群之间交互使用的是 fabric8 的 kubernetes-client library。
+
+当我们使用的是 fabric8  的 kubernetes-client 所不支持的认证机制时可以使用 `kubectl proxy`。它目前支持X509 Client Certs 和 OAuth tokens。
 
 ## 动态 Executor Scale
 
@@ -326,12 +313,10 @@ In addition to the settings specified by the previously linked security page, th
   <td>(none)</td>
   <td>
 
-```
 Private key file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this
 is specified, the associated public key file must be specified in
 <code>spark.ssl.kubernetes.resourceStagingServer.serverCertPem</code>. PEM files and a keyStore file (set by
 <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>) cannot both be specified at the same time.
-```
 
   </td>
 </tr>
@@ -340,12 +325,10 @@ is specified, the associated public key file must be specified in
   <td>(none)</td>
   <td>
 
-```
 Certificate file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this
 is specified, the associated private key file must be specified in
 <code>spark.ssl.kubernetes.resourceStagingServer.keyPem</code>. PEM files and a keyStore file (set by
 <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>) cannot both be specified at the same time.
-```
 
   </td>
 </tr>
@@ -354,10 +337,8 @@ is specified, the associated private key file must be specified in
   <td>(none)</td>
   <td>
 
-```
 Provides the KeyStore password through a file in the container instead of a static value. This is useful if the
 keyStore's password is to be mounted into the container with a secret.
-```
 
   </td>
 </tr>
@@ -366,10 +347,8 @@ keyStore's password is to be mounted into the container with a secret.
   <td>(none)</td>
   <td>
 
-```
 Provides the keyStore's key password using a file in the container instead of a static value. This is useful if the
 keyStore's key password is to be mounted into the container with a secret.
-```
 
   </td>
 </tr>
@@ -382,7 +361,6 @@ Finally, when you submit your application, you must specify either a trustStore 
 `spark.ssl.kubernetes.resourceStagingServer.trustStore`, or a certificate file can be set with
 `spark.ssl.kubernetes.resourceStagingServer.clientCertPem`. For example, our SparkPi example now looks like this:
 
-```
 bin/spark-submit \
   --deploy-mode cluster \
   --class org.apache.spark.examples.SparkPi \
@@ -397,7 +375,6 @@ bin/spark-submit \
   --conf spark.ssl.kubernetes.resourceStagingServer.enabled=true \
   --conf spark.ssl.kubernetes.resourceStagingServer.clientCertPem=/home/myuser/cert.pem \
   examples/jars/spark_examples_2.11-2.2.0.jar
-```
 
 ### Spark Properties
 
@@ -410,11 +387,9 @@ Below are some other common properties that are specific to Kubernetes. Most of 
   <td><code>default</code></td>
   <td>
 
-```
 The namespace that will be used for running the driver and executor pods. When using
 <code>spark-submit</code> in cluster mode, this can also be passed to <code>spark-submit</code> via the
 <code>--kubernetes-namespace</code> command line argument.
-```
 
   </td>
 </tr>
@@ -423,10 +398,8 @@ The namespace that will be used for running the driver and executor pods. When u
   <td><code>spark-driver:2.2.0</code></td>
   <td>
 
-```
 Docker image to use for the driver. Specify this using the standard
 <a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> format.
-```
 
   </td>
 </tr>
@@ -435,10 +408,8 @@ Docker image to use for the driver. Specify this using the standard
   <td><code>spark-executor:2.2.0</code></td>
   <td>
 
-```
 Docker image to use for the executors. Specify this using the standard
 <a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> format.
-```
 
   </td>
 </tr>
@@ -447,12 +418,7 @@ Docker image to use for the executors. Specify this using the standard
   <td><code>spark-init:2.2.0</code></td>
   <td>
 
-```
-Docker image to use for the init-container that is run before the driver and executor containers. Specify this using
-the standard <a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> format. The
-init-container is responsible for fetching application dependencies from both remote locations like HDFS or S3,
-and from the resource staging server, if applicable.
-```
+Docker image to use for the init-container that is run before the driver and executor containers. Specify this using the standard <a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> format. The init-container is responsible for fetching application dependencies from both remote locations like HDFS or S3, and from the resource staging server, if applicable.
 
   </td>
 </tr>
@@ -461,10 +427,7 @@ and from the resource staging server, if applicable.
   <td><code>default</code></td>
   <td>
 
-```
-Namespace in which the shuffle service pods are present. The shuffle service must be
-created in the cluster prior to attempts to use it.
-```
+Namespace in which the shuffle service pods are present. The shuffle service must be created in the cluster prior to attempts to use it.
 
   </td>
 </tr>
@@ -473,11 +436,7 @@ created in the cluster prior to attempts to use it.
   <td>(none)</td>
   <td>
 
-```
-Labels that will be used to look up shuffle service pods. This should be a comma-separated list of label key-value pairs,
-where each label is in the format <code>key=value</code>. The labels chosen must be such that
-they match exactly one shuffle service pod on each node that executors are launched.
-```
+Labels that will be used to look up shuffle service pods. This should be a comma-separated list of label key-value pairs, where each label is in the format <code>key=value</code>. The labels chosen must be such that they match exactly one shuffle service pod on each node that executors are launched.
 
   </td>
 </tr>
@@ -486,9 +445,7 @@ they match exactly one shuffle service pod on each node that executors are launc
   <td><code>5</code></td>
   <td>
 
-```
 Number of pods to launch at once in each round of executor pod allocation.
-```
 
   </td>
 </tr>
@@ -497,9 +454,7 @@ Number of pods to launch at once in each round of executor pod allocation.
   <td><code>1</code></td>
   <td>
 
-```
 Number of seconds to wait between each round of executor pod allocation.
-```
 
   </td>
 </tr>
@@ -508,11 +463,7 @@ Number of seconds to wait between each round of executor pod allocation.
   <td>(none)</td>
   <td>
 
-```
-Path to the CA cert file for connecting to the Kubernetes API server over TLS when starting the driver. This file
-must be located on the submitting machine's disk. Specify this as a path as opposed to a URI (i.e. do not provide
-a scheme).
-```
+Path to the CA cert file for connecting to the Kubernetes API server over TLS when starting the driver. This file must be located on the submitting machine's disk. Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
 
   </td>
 </tr>
@@ -521,11 +472,7 @@ a scheme).
   <td>(none)</td>
   <td>
 
-```
-Path to the client key file for authenticating against the Kubernetes API server when starting the driver. This file
-must be located on the submitting machine's disk. Specify this as a path as opposed to a URI (i.e. do not provide
-a scheme).
-```
+Path to the client key file for authenticating against the Kubernetes API server when starting the driver. This file must be located on the submitting machine's disk. Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
 
   </td>
 </tr>
@@ -534,11 +481,7 @@ a scheme).
   <td>(none)</td>
   <td>
 
-```
-Path to the client cert file for authenticating against the Kubernetes API server when starting the driver. This
-file must be located on the submitting machine's disk. Specify this as a path as opposed to a URI (i.e. do not
-provide a scheme).
-```
+Path to the client cert file for authenticating against the Kubernetes API server when starting the driver. This file must be located on the submitting machine's disk. Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
 
   </td>
 </tr>
@@ -547,11 +490,8 @@ provide a scheme).
   <td>(none)</td>
   <td>
 
-```
 OAuth token to use when authenticating against the Kubernetes API server when starting the driver. Note
-that unlike the other authentication options, this is expected to be the exact string value of the token to use for
-the authentication.
-```
+that unlike the other authentication options, this is expected to be the exact string value of the token to use for the authentication.
 
   </td>
 </tr>
@@ -560,11 +500,7 @@ the authentication.
   <td>(none)</td>
   <td>
 
-```
-Path to the CA cert file for connecting to the Kubernetes API server over TLS from the driver pod when requesting
-executors. This file must be located on the submitting machine's disk, and will be uploaded to the driver pod.
-Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
-```
+Path to the CA cert file for connecting to the Kubernetes API server over TLS from the driver pod when requesting executors. This file must be located on the submitting machine's disk, and will be uploaded to the driver pod. Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
 
   </td>
 </tr>
@@ -573,13 +509,7 @@ Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
   <td>(none)</td>
   <td>
 
-```
-Path to the client key file for authenticating against the Kubernetes API server from the driver pod when requesting
-executors. This file must be located on the submitting machine's disk, and will be uploaded to the driver pod.
-Specify this as a path as opposed to a URI (i.e. do not provide a scheme). If this is specified, it is highly
-recommended to set up TLS for the driver submission server, as this value is sensitive information that would be
-passed to the driver pod in plaintext otherwise.
-```
+Path to the client key file for authenticating against the Kubernetes API server from the driver pod when requesting executors. This file must be located on the submitting machine's disk, and will be uploaded to the driver pod. Specify this as a path as opposed to a URI (i.e. do not provide a scheme). If this is specified, it is highly recommended to set up TLS for the driver submission server, as this value is sensitive information that would be passed to the driver pod in plaintext otherwise.
 
   </td>
 </tr>
@@ -588,11 +518,8 @@ passed to the driver pod in plaintext otherwise.
   <td>(none)</td>
   <td>
 
-```
 Path to the client cert file for authenticating against the Kubernetes API server from the driver pod when
-requesting executors. This file must be located on the submitting machine's disk, and will be uploaded to the
-driver pod. Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
-```
+requesting executors. This file must be located on the submitting machine's disk, and will be uploaded to the driver pod. Specify this as a path as opposed to a URI (i.e. do not provide a scheme).
 
   </td>
 </tr>
@@ -601,13 +528,7 @@ driver pod. Specify this as a path as opposed to a URI (i.e. do not provide a sc
   <td>(none)</td>
   <td>
 
-```
-OAuth token to use when authenticating against the against the Kubernetes API server from the driver pod when
-requesting executors. Note that unlike the other authentication options, this must be the exact string value of
-the token to use for the authentication. This token value is uploaded to the driver pod. If this is specified, it is
-highly recommended to set up TLS for the driver submission server, as this value is sensitive information that would
-be passed to the driver pod in plaintext otherwise.
-```
+OAuth token to use when authenticating against the against the Kubernetes API server from the driver pod when requesting executors. Note that unlike the other authentication options, this must be the exact string value of the token to use for the authentication. This token value is uploaded to the driver pod. If this is specified, it is highly recommended to set up TLS for the driver submission server, as this value is sensitive information that would be passed to the driver pod in plaintext otherwise.
 
   </td>
 </tr>
@@ -616,11 +537,7 @@ be passed to the driver pod in plaintext otherwise.
   <td><code>default</code></td>
   <td>
 
-```
-Service account that is used when running the driver pod. The driver pod uses this service account when requesting
-executor pods from the API server. Note that this cannot be specified alongside a CA cert file, client key file,
-client cert file, and/or OAuth token.
-```
+Service account that is used when running the driver pod. The driver pod uses this service account when requesting executor pods from the API server. Note that this cannot be specified alongside a CA cert file, client key file, client cert file, and/or OAuth token.
 
   </td>
 </tr>
@@ -629,10 +546,7 @@ client cert file, and/or OAuth token.
   <td>(none)</td>
   <td>
 
-```
-Path to the CA cert file for connecting to the Kubernetes API server over TLS from the resource staging server when
-it monitors objects in determining when to clean up resource bundles.
-```
+Path to the CA cert file for connecting to the Kubernetes API server over TLS from the resource staging server when it monitors objects in determining when to clean up resource bundles.
 
   </td>
 </tr>
@@ -641,11 +555,7 @@ it monitors objects in determining when to clean up resource bundles.
   <td>(none)</td>
   <td>
 
-```
-Path to the client key file for authenticating against the Kubernetes API server from the resource staging server
-when it monitors objects in determining when to clean up resource bundles. The resource staging server must have
-credentials that allow it to view API objects in any namespace.
-```
+Path to the client key file for authenticating against the Kubernetes API server from the resource staging server when it monitors objects in determining when to clean up resource bundles. The resource staging server must have credentials that allow it to view API objects in any namespace.
 
   </td>
 </tr>
@@ -654,11 +564,7 @@ credentials that allow it to view API objects in any namespace.
   <td>(none)</td>
   <td>
 
-```
-Path to the client cert file for authenticating against the Kubernetes API server from the resource staging server
-when it monitors objects in determining when to clean up resource bundles. The resource staging server must have
-credentials that allow it to view API objects in any namespace.
-```
+Path to the client cert file for authenticating against the Kubernetes API server from the resource staging server when it monitors objects in determining when to clean up resource bundles. The resource staging server must have credentials that allow it to view API objects in any namespace.
 
   </td>
 </tr>
@@ -667,12 +573,9 @@ credentials that allow it to view API objects in any namespace.
   <td>(none)</td>
   <td>
 
-```
 OAuth token value for authenticating against the Kubernetes API server from the resource staging server
-when it monitors objects in determining when to clean up resource bundles. The resource staging server must have
-credentials that allow it to view API objects in any namespace. Note that this cannot be set at the same time as
+when it monitors objects in determining when to clean up resource bundles. The resource staging server must have credentials that allow it to view API objects in any namespace. Note that this cannot be set at the same time as
 <code>spark.kubernetes.authenticate.resourceStagingServer.oauthTokenFile</code>.
-```
 
   </td>
 </tr>
@@ -681,12 +584,7 @@ credentials that allow it to view API objects in any namespace. Note that this c
   <td>(none)</td>
   <td>
 
-```
-File containing the OAuth token to use when authenticating against the against the Kubernetes API server from the
-resource staging server, when it monitors objects in determining when to clean up resource bundles. The resource
-staging server must have credentials that allow it to view API objects in any namespace. Note that this cannot be
-set at the same time as <code>spark.kubernetes.authenticate.resourceStagingServer.oauthToken</code>.
-```
+File containing the OAuth token to use when authenticating against the against the Kubernetes API server from the resource staging server, when it monitors objects in determining when to clean up resource bundles. The resource staging server must have credentials that allow it to view API objects in any namespace. Note that this cannot be set at the same time as <code>spark.kubernetes.authenticate.resourceStagingServer.oauthToken</code>.
 
   </td>
 </tr>
@@ -695,9 +593,7 @@ set at the same time as <code>spark.kubernetes.authenticate.resourceStagingServe
   <td>true</td>
   <td>
 
-```
-Whether or not to use a service account token and a service account CA certificate when the resource staging server
-authenticates to Kubernetes. If this is set, interactions with Kubernetes will authenticate using a token located at
+Whether or not to use a service account token and a service account CA certificate when the resource staging server authenticates to Kubernetes. If this is set, interactions with Kubernetes will authenticate using a token located at
 <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code> and the CA certificate located at
 <code>/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</code>. Note that if
 <code>spark.kubernetes.authenticate.resourceStagingServer.oauthTokenFile</code> is set, it takes precedence
@@ -707,7 +603,6 @@ the service account's CA certificate file. This generally should be set to true 
 resource staging server is deployed as a Kubernetes pod, but should be set to false if the resource staging server
 is deployed by other means (i.e. when running the staging server process outside of Kubernetes). The resource
 staging server must have credentials that allow it to view API objects in any namespace.
-```
 
   </td>
 </tr>
@@ -716,11 +611,7 @@ staging server must have credentials that allow it to view API objects in any na
   <td>executorMemory * 0.10, with minimum of 384</td>
   <td>
 
-```
-The amount of off-heap memory (in megabytes) to be allocated per executor. This is memory that accounts for things
-like VM overheads, interned strings, other native overheads, etc. This tends to grow with the executor size
-(typically 6-10%).
-```
+The amount of off-heap memory (in megabytes) to be allocated per executor. This is memory that accounts for things like VM overheads, interned strings, other native overheads, etc. This tends to grow with the executor size (typically 6-10%).
 
   </td>
 </tr>
@@ -729,11 +620,7 @@ like VM overheads, interned strings, other native overheads, etc. This tends to 
   <td>(none)</td>
   <td>
 
-```
-Custom labels that will be added to the driver pod. This should be a comma-separated list of label key-value pairs,
-where each label is in the format <code>key=value</code>. Note that Spark also adds its own labels to the driver pod
-for bookkeeping purposes.
-```
+Custom labels that will be added to the driver pod. This should be a comma-separated list of label key-value pairs, where each label is in the format <code>key=value</code>. Note that Spark also adds its own labels to the driver pod for bookkeeping purposes.
 
   </td>
 </tr>
@@ -742,10 +629,8 @@ for bookkeeping purposes.
   <td>(none)</td>
   <td>
 
-```
 Custom annotations that will be added to the driver pod. This should be a comma-separated list of label key-value
 pairs, where each annotation is in the format <code>key=value</code>.
-```
 
   </td>
 </tr>
@@ -754,11 +639,9 @@ pairs, where each annotation is in the format <code>key=value</code>.
   <td>(none)</td>
   <td>
 
-```
 Custom labels that will be added to the executor pods. This should be a comma-separated list of label key-value
 pairs, where each label is in the format <code>key=value</code>. Note that Spark also adds its own labels to the
 executor pods for bookkeeping purposes.
-```
 
   </td>
 </tr>
@@ -767,10 +650,8 @@ executor pods for bookkeeping purposes.
   <td>(none)</td>
   <td>
 
-```
 Custom annotations that will be added to the executor pods. This should be a comma-separated list of annotation
 key-value pairs, where each annotation is in the format <code>key=value</code>.
-```
 
   </td>
 </tr>
@@ -779,10 +660,8 @@ key-value pairs, where each annotation is in the format <code>key=value</code>.
   <td>(none)</td>
   <td>
 
-```
 Name of the driver pod. If not set, the driver pod name is set to "spark.app.name" suffixed by the current timestamp
 to avoid name conflicts.
-```
 
   </td>
 </tr>
@@ -791,10 +670,8 @@ to avoid name conflicts.
   <td><code>true</code></td>
   <td>
 
-```
 In cluster mode, whether to wait for the application to finish before exiting the launcher process.  When changed to
 false, the launcher has a "fire-and-forget" behavior when launching the Spark job.
-```
 
   </td>
 </tr>
@@ -803,9 +680,7 @@ false, the launcher has a "fire-and-forget" behavior when launching the Spark jo
   <td><code>10000</code></td>
   <td>
 
-```
 Port for the resource staging server to listen on when it is deployed.
-```
 
   </td>
 </tr>
@@ -814,13 +689,11 @@ Port for the resource staging server to listen on when it is deployed.
   <td>(none)</td>
   <td>
 
-```
 URI of the resource staging server that Spark should use to distribute the application's local dependencies. Note
 that by default, this URI must be reachable by both the submitting machine and the pods running in the cluster. If
 one URI is not simultaneously reachable both by the submitter and the driver/executor pods, configure the pods to
 access the staging server at a different URI by setting
 <code>spark.kubernetes.resourceStagingServer.internal.uri</code> as discussed below.
-```
 
   </td>
 </tr>
@@ -829,12 +702,10 @@ access the staging server at a different URI by setting
   <td>Value of <code>spark.kubernetes.resourceStagingServer.uri</code></td>
   <td>
 
-```
 URI of the resource staging server to communicate with when init-containers bootstrap the driver and executor pods
 with submitted local dependencies. Note that this URI must by the pods running in the cluster. This is useful to
 set if the resource staging server has a separate "internal" URI that must be accessed by components running in the
 cluster.
-```
 
   </td>
 </tr>
@@ -843,37 +714,31 @@ cluster.
   <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.trustStore</code></td>
   <td>
 
-```
 Location of the trustStore file to use when communicating with the resource staging server over TLS, as
 init-containers bootstrap the driver and executor pods with submitted local dependencies. This can be a URI with a
 scheme of <code>local://</code>, which denotes that the file is pre-mounted on the pod's disk. A uri without a
 scheme or a scheme of <code>file://</code> will result in this file being mounted from the submitting machine's
 disk as a secret into the init-containers.
-```
 
   </td>
 </tr>
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.internal.trustStorePassword</code></td>
-  <td>Value of <code><code>spark.ssl.kubernetes.resourceStagingServer.trustStorePassword</code></td>
+  <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.trustStorePassword</code></td>
   <td>
 
-```
 Password of the trustStore file that is used when communicating with the resource staging server over TLS, as
 init-containers bootstrap the driver and executor pods with submitted local dependencies.
-```
 
   </td>
 </tr>
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.internal.trustStoreType</code></td>
-  <td>Value of <code><code>spark.ssl.kubernetes.resourceStagingServer.trustStoreType</code></td>
+  <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.trustStoreType</code></td>
   <td>
 
-```
 Type of the trustStore file that is used when communicating with the resource staging server over TLS, when
 init-containers bootstrap the driver and executor pods with submitted local dependencies.
-```
 
   </td>
 </tr>
@@ -882,13 +747,11 @@ init-containers bootstrap the driver and executor pods with submitted local depe
   <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.clientCertPem</code></td>
   <td>
 
-```
 Location of the certificate file to use when communicating with the resource staging server over TLS, as
 init-containers bootstrap the driver and executor pods with submitted local dependencies. This can be a URI with a
 scheme of <code>local://</code>, which denotes that the file is pre-mounted on the pod's disk. A uri without a
 scheme or a scheme of <code>file://</code> will result in this file being mounted from the submitting machine's
 disk as a secret into the init-containers.
-```
 
   </td>
 </tr>
@@ -897,10 +760,8 @@ disk as a secret into the init-containers.
   <td><code>/var/spark-data/spark-jars</code></td>
   <td>
 
-```
 Location to download jars to in the driver and executors. This will be mounted as an empty directory volume
 into the driver and executor containers.
-```
 
   </td>
 </tr>
@@ -909,10 +770,8 @@ into the driver and executor containers.
   <td><code>/var/spark-data/spark-files</code></td>
   <td>
 
-```
 Location to download files to in the driver and executors. This will be mounted as an empty directory volume
 into the driver and executor containers.
-```
 
   </td>
 </tr>
@@ -921,9 +780,7 @@ into the driver and executor containers.
   <td><code>1s</code></td>
   <td>
 
-```
 Interval between reports of the current Spark job status in cluster mode.
-```
 
   </td>
 </tr>
@@ -932,9 +789,7 @@ Interval between reports of the current Spark job status in cluster mode.
   <td><code>IfNotPresent</code></td>
   <td>
 
-```
 Docker image pull policy used when pulling Docker images with Kubernetes.
-```
 
   </td>
 </tr>
@@ -943,9 +798,7 @@ Docker image pull policy used when pulling Docker images with Kubernetes.
    <td>(none)</td>
    <td>
 
-```
  Specify the hard cpu limit for the driver pod
-```
 
    </td>
  </tr>
@@ -954,9 +807,7 @@ Docker image pull policy used when pulling Docker images with Kubernetes.
    <td>(none)</td>
    <td>
 
-```
  Specify the hard cpu limit for a single executor pod
-```
 
    </td>
  </tr>
@@ -965,37 +816,27 @@ Docker image pull policy used when pulling Docker images with Kubernetes.
    <td>(none)</td>
    <td>
 
-```
  Adds to the node selector of the driver pod and executor pods, with key <code>labelKey</code> and the value as the 
  configuration's value. For example, setting <code>spark.kubernetes.node.selector.identifier</code> to <code>myIdentifier</code>
  will result in the driver pod and executors having a node selector with key <code>identifier</code> and value 
   <code>myIdentifier</code>. Multiple node selector keys can be added by setting multiple configurations with this prefix.
 </td>
-```
 
   </tr>
  <tr>
    <td><code>spark.executorEnv.[EnvironmentVariableName]</code></td> 
    <td>(none)</td>
    <td>
-
-```
  Add the environment variable specified by <code>EnvironmentVariableName</code> to
  the Executor process. The user can specify multiple of these to set multiple environment variables.
-```
-
    </td>
  </tr>
  <tr>
    <td><code>spark.kubernetes.driverEnv.[EnvironmentVariableName]</code></td> 
    <td>(none)</td>
    <td>
-
-```
  Add the environment variable specified by <code>EnvironmentVariableName</code> to
  the Driver process. The user can specify multiple of these to set multiple environment variables.
-```
-
    </td>
  </tr>
 </table>
