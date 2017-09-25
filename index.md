@@ -22,4 +22,5 @@ GitHub repo：[apache-spark-on-k8s/spark](https://github.com/apache-spark-on-k8s
 
 * [在 Kubernetes 上运行 Spark](./running-on-kubernetes.html)
 * [在云环境上运行 Spark](./running-on-kubernetes-cloud.html)
+* [用户指南](user-guide.html)
 * [贡献说明](./contribute.html)

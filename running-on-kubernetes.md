@@ -313,8 +313,7 @@ In addition to the settings specified by the previously linked security page, th
   <td>(none)</td>
   <td>
 
-Private key file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this
-is specified, the associated public key file must be specified in
+Private key file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this is specified, the associated public key file must be specified in
 <code>spark.ssl.kubernetes.resourceStagingServer.serverCertPem</code>. PEM files and a keyStore file (set by
 <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>) cannot both be specified at the same time.
 
@@ -325,8 +324,7 @@ is specified, the associated public key file must be specified in
   <td>(none)</td>
   <td>
 
-Certificate file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this
-is specified, the associated private key file must be specified in
+Certificate file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this is specified, the associated private key file must be specified in
 <code>spark.ssl.kubernetes.resourceStagingServer.keyPem</code>. PEM files and a keyStore file (set by
 <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>) cannot both be specified at the same time.
 
@@ -347,8 +345,7 @@ keyStore's password is to be mounted into the container with a secret.
   <td>(none)</td>
   <td>
 
-Provides the keyStore's key password using a file in the container instead of a static value. This is useful if the
-keyStore's key password is to be mounted into the container with a secret.
+Provides the keyStore's key password using a file in the container instead of a static value. This is useful if the keyStore's key password is to be mounted into the container with a secret.
 
   </td>
 </tr>
@@ -361,6 +358,7 @@ Finally, when you submit your application, you must specify either a trustStore 
 `spark.ssl.kubernetes.resourceStagingServer.trustStore`, or a certificate file can be set with
 `spark.ssl.kubernetes.resourceStagingServer.clientCertPem`. For example, our SparkPi example now looks like this:
 
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --class org.apache.spark.examples.SparkPi \
@@ -375,13 +373,14 @@ bin/spark-submit \
   --conf spark.ssl.kubernetes.resourceStagingServer.enabled=true \
   --conf spark.ssl.kubernetes.resourceStagingServer.clientCertPem=/home/myuser/cert.pem \
   examples/jars/spark_examples_2.11-2.2.0.jar
+```
 
 ### Spark Properties
 
-Below are some other common properties that are specific to Kubernetes. Most of the other configurations are the same from the other deployment modes. See the [configuration page](configuration.html) for more information on those.
+下面是单独针对 spark on kubernetes 的一些配置。其他配置项就跟使用 YARN 或 Mesos 运行一样。查看 [配置页面](configuration.html) 获取更多信息。
 
 <table class="table">
-<tr><th>Property Name</th><th>Default</th><th>Meaning</th></tr>
+<tr><th>属性名称</th><th>默认值</th><th>含义</th></tr>
 <tr>
   <td><code>spark.kubernetes.namespace</code></td>
   <td><code>default</code></td>
