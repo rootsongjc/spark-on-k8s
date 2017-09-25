@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <!--
+        <title>用户指南 - Spark 2.1.0 Documentation</title>
+        -->
+        <title>用户指南 - Spark on Kubernetes文档</title>
+        
+          <meta name="description" content="Apache Spark on Kubernetes 用户指南">
+        
+
+        
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+            }
+        </style>
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+        <link rel="stylesheet" href="css/main.css">
+
+        <script src="js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+
+        <link rel="stylesheet" href="css/pygments-default.css">
+
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+        <![endif]-->
+
+        <!-- This code is taken from http://twitter.github.com/bootstrap/examples/hero.html -->
+
+        <div class="navbar navbar-fixed-top" id="topbar">
+            <div class="navbar-inner">
+                <div class="container">
+                    <div class="brand"><a href="index.html">
+                      <img src="img/spark-logo-hd.png" style="height:50px;"/></a><span class="version">2.1.0</span>
+                    </div>
+                    <ul class="nav">
+                        <!--TODO(andyk): Add class="active" attribute to li some how.-->
+                        <li><a href="index.html">Overview</a></li>
+                    </ul>
+                    <!--<p class="navbar-text pull-right"><span class="version-text">v2.1.0</span></p>-->
+                </div>
+            </div>
+        </div>
+
+        <div class="container-wrapper">
+
+            
+                <div class="content" id="content">
+                    
+                        <h1 class="title">Apache Spark on Kubernetes用户指南</h1>
+                    
+                    <h2 id="镜像说明">镜像说明</h2>
+
+<p>我们可以直接使用官方已编译好的 docker 镜像来部署，下面是官方发布的镜像：</p>
+
+<table class="table">
+<tr><th>组件</th><th>镜像</th></tr>
+<tr>
+  <td>Spark Driver Image</td>
+  <td><code>kubespark/spark-driver:v2.1.0-kubernetes-0.3.1</code></td>
+</tr>
+<tr>
+  <td>Spark Executor Image</td>
+  <td><code>kubespark/spark-executor:v2.1.0-kubernetes-0.3.1</code></td>
+</tr>
+<tr>
+  <td>Spark Initialization Image</td>
+  <td><code>kubespark/spark-init:v2.1.0-kubernetes-0.3.1</code></td>
+</tr>
+<tr>
+  <td>Spark Staging Server Image</td>
+  <td><code>kubespark/spark-resource-staging-server:v2.1.0-kubernetes-0.3.1</code></td>
+</tr>
+<tr>
+  <td>PySpark Driver Image</td>
+  <td><code>kubespark/driver-py:v2.1.0-kubernetes-0.3.1</code></td>
+</tr>
+<tr>
+  <td>PySpark Executor Image</td>
+  <td><code>kubespark/executor-py:v2.1.0-kubernetes-0.3.1</code></td>
+</tr>
+</table>
+
+<p>我将这些镜像放到了我的私有镜像仓库中了。</p>
+
+<p>还需要安装支持 kubernetes 的 spark 客户端，在这里下载：https://github.com/apache-spark-on-k8s/spark/releases</p>
+
+<p>根据使用的镜像版本，我下载的是 <a href="https://github.com/apache-spark-on-k8s/spark/releases/tag/v2.1.0-kubernetes-0.3.1">v2.1.0-kubernetes-0.3.1</a></p>
+
+<p><strong>运行 SparkPi 测试</strong></p>
+
+<p>我们将任务运行在 <code>spark-cluster</code> 的 namespace 中，启动 5 个 executor 实例。</p>
+
+<pre><code class="language-bash">./bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://https://172.20.0.113:6443 \
+  --kubernetes-namespace spark-cluster \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/kubespark-spark-driver:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.executor.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/kubespark-spark-executor:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.initcontainer.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/kubespark-spark-init:v2.1.0-kubernetes-0.3.1 \
+local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar
+</code></pre>
+
+<p>关于该命令参数的介绍请参考：https://apache-spark-on-k8s.github.io/userdocs/running-on-kubernetes.html</p>
+
+<p><strong>注意：</strong> 该 jar 包实际上是 <code>spark.kubernetes.executor.docker.image</code> 镜像中的。</p>
+
+<p>这时候提交任务运行还是失败，报错信息中可以看到两个问题：</p>
+
+<ul>
+  <li>Executor 无法找到 driver pod</li>
+  <li>用户 <code>system:serviceaccount:spark-cluster:defaul</code> 没有权限获取 <code>spark-cluster</code> 中的 pod 信息。</li>
+</ul>
+
+<p>提了个 issue <a href="https://github.com/apache-spark-on-k8s/spark/issues/478">Failed to run the sample spark-pi test using spark-submit on the doc #478</a></p>
+
+<p>需要为 spark 集群创建一个 <code>serviceaccount</code> 和 <code>clusterrolebinding</code>：</p>
+
+<pre><code class="language-bash">kubectl create serviceaccount spark --namespace spark-cluster
+kubectl create rolebinding spark-edit --clusterrole=edit --serviceaccount=spark-cluster:spark --namespace=spark-cluster
+</code></pre>
+
+<p>该 Bug 将在新版本中修复。</p>
+
+<h2 id="用户指南">用户指南</h2>
+
+<h3 id="编译">编译</h3>
+
+<p>Fork 并克隆项目到本地：</p>
+
+<pre><code class="language-bash">git clone https://github.com/rootsongjc/spark.git
+</code></pre>
+
+<p>编译前请确保你的环境中已经安装 Java8 和 Maven3。</p>
+
+<pre><code class="language-bash">## 第一次编译前需要安装依赖
+build/mvn install -Pkubernetes -pl resource-managers/kubernetes/core -am -DskipTests
+
+## 编译 spark on kubernetes
+build/mvn compile -Pkubernetes -pl resource-managers/kubernetes/core -am -DskipTests
+
+## 发布
+dev/make-distribution.sh --tgz -Phadoop-2.7 -Pkubernetes
+</code></pre>
+
+<p>第一次编译和发布的过程耗时可能会比较长，请耐心等待，如果有依赖下载不下来，请自备梯子。</p>
+
+<p>详细的开发指南请见：https://github.com/apache-spark-on-k8s/spark/blob/branch-2.2-kubernetes/resource-managers/kubernetes/README.md</p>
+
+<h3 id="构建镜像">构建镜像</h3>
+
+<p>使用该脚本来自动构建容器镜像：https://github.com/apache-spark-on-k8s/spark/pull/488</p>
+
+<p>将该脚本放在 <code>dist</code> 目录下，执行：</p>
+
+<pre><code class="language-bash">./build-push-docker-images.sh -r sz-pg-oam-docker-hub-001.tendcloud.com/library -t v2.1.0-kubernetes-0.3.1-1 build
+./build-push-docker-images.sh -r sz-pg-oam-docker-hub-001.tendcloud.com/library -t v2.1.0-kubernetes-0.3.1-1 push
+</code></pre>
+
+<p><strong>注意：</strong>如果你使用的 MacOS，bash 的版本可能太低，执行改脚本将出错，请检查你的 bash 版本：</p>
+
+<pre><code class="language-bash">bash --version
+GNU bash, version 3.2.57(1)-release (x86_64-apple-darwin16)
+Copyright (C) 2007 Free Software Foundation, Inc.
+</code></pre>
+
+<p>上面我在升级 bash 之前获取的版本信息，使用下面的命令升级 bash：</p>
+
+<pre><code class="language-bash">brew install bash
+</code></pre>
+
+<p>升级后的 bash 版本为 <code>4.4.12(1)-release (x86_64-apple-darwin16.3.0)</code>。</p>
+
+<p>编译并上传镜像到我的私有镜像仓库，将会构建出如下几个镜像：</p>
+
+<pre><code class="language-bash">sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1
+sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-resource-staging-server:v2.1.0-kubernetes-0.3.1-1
+sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-init:v2.1.0-kubernetes-0.3.1-1
+sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-shuffle:v2.1.0-kubernetes-0.3.1-1
+sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-executor:v2.1.0-kubernetes-0.3.1-1
+sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-executor-py:v2.1.0-kubernetes-0.3.1-1
+sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver-py:v2.1.0-kubernetes-0.3.1-1
+</code></pre>
+
+<h2 id="运行测试">运行测试</h2>
+
+<p>在 <code>dist/bin</code> 目录下执行 spark-pi 测试：</p>
+
+<pre><code class="language-bash">./spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://https://172.20.0.113:6443 \
+  --kubernetes-namespace spark-cluster \
+  --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.executor.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-executor:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.initcontainer.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-init:v2.1.0-kubernetes-0.3.1-1 \
+local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0-SNAPSHOT.jar
+</code></pre>
+
+<p>详细的参数说明见：https://apache-spark-on-k8s.github.io/userdocs/running-on-kubernetes.html</p>
+
+<p><strong>注意：</strong><code>local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0-SNAPSHOT.jar</code> 文件是在 <code>spark-driver</code> 和 <code>spark-executor</code> 镜像里的，在上一步构建镜像时已经构建并上传到了镜像仓库中。</p>
+
+<p>执行日志显示：</p>
+
+<pre><code class="language-bash">2017-09-14 14:59:01 INFO  Client:54 - Waiting for application spark-pi to finish...
+2017-09-14 14:59:01 INFO  LoggingPodStatusWatcherImpl:54 - State changed, new state:
+	 pod name: spark-pi-1505372339796-driver
+	 namespace: spark-cluster
+	 labels: spark-app-selector -&gt; spark-f4d3a5d3ad964a05a51feb6191d50357, spark-role -&gt; driver
+	 pod uid: 304cf440-991a-11e7-970c-f4e9d49f8ed0
+	 creation time: 2017-09-14T06:59:01Z
+	 service account name: spark
+	 volumes: spark-token-zr8wv
+	 node name: N/A
+	 start time: N/A
+	 container images: N/A
+	 phase: Pending
+	 status: []
+2017-09-14 14:59:01 INFO  LoggingPodStatusWatcherImpl:54 - State changed, new state:
+	 pod name: spark-pi-1505372339796-driver
+	 namespace: spark-cluster
+	 labels: spark-app-selector -&gt; spark-f4d3a5d3ad964a05a51feb6191d50357, spark-role -&gt; driver
+	 pod uid: 304cf440-991a-11e7-970c-f4e9d49f8ed0
+	 creation time: 2017-09-14T06:59:01Z
+	 service account name: spark
+	 volumes: spark-token-zr8wv
+	 node name: 172.20.0.114
+	 start time: N/A
+	 container images: N/A
+	 phase: Pending
+	 status: []
+2017-09-14 14:59:01 INFO  LoggingPodStatusWatcherImpl:54 - State changed, new state:
+	 pod name: spark-pi-1505372339796-driver
+	 namespace: spark-cluster
+	 labels: spark-app-selector -&gt; spark-f4d3a5d3ad964a05a51feb6191d50357, spark-role -&gt; driver
+	 pod uid: 304cf440-991a-11e7-970c-f4e9d49f8ed0
+	 creation time: 2017-09-14T06:59:01Z
+	 service account name: spark
+	 volumes: spark-token-zr8wv
+	 node name: 172.20.0.114
+	 start time: 2017-09-14T06:59:01Z
+	 container images: sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1
+	 phase: Pending
+	 status: [ContainerStatus(containerID=null, image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1, imageID=, lastState=ContainerState(running=null, terminated=null, waiting=null, additionalProperties={}), name=spark-kubernetes-driver, ready=false, restartCount=0, state=ContainerState(running=null, terminated=null, waiting=ContainerStateWaiting(message=null, reason=ContainerCreating, additionalProperties={}), additionalProperties={}), additionalProperties={})]
+2017-09-14 14:59:03 INFO  LoggingPodStatusWatcherImpl:54 - State changed, new state:
+	 pod name: spark-pi-1505372339796-driver
+	 namespace: spark-cluster
+	 labels: spark-app-selector -&gt; spark-f4d3a5d3ad964a05a51feb6191d50357, spark-role -&gt; driver
+	 pod uid: 304cf440-991a-11e7-970c-f4e9d49f8ed0
+	 creation time: 2017-09-14T06:59:01Z
+	 service account name: spark
+	 volumes: spark-token-zr8wv
+	 node name: 172.20.0.114
+	 start time: 2017-09-14T06:59:01Z
+	 container images: sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1
+	 phase: Running
+	 status: [ContainerStatus(containerID=docker://5c5c821c482a1e35552adccb567020532b79244392374f25754f0050e6cd4c62, image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1, imageID=docker-pullable://sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver@sha256:beb92a3e3f178e286d9e5baebdead88b5ba76d651f347ad2864bb6f8eda26f94, lastState=ContainerState(running=null, terminated=null, waiting=null, additionalProperties={}), name=spark-kubernetes-driver, ready=true, restartCount=0, state=ContainerState(running=ContainerStateRunning(startedAt=2017-09-14T06:59:02Z, additionalProperties={}), terminated=null, waiting=null, additionalProperties={}), additionalProperties={})]
+2017-09-14 14:59:12 INFO  LoggingPodStatusWatcherImpl:54 - State changed, new state:
+	 pod name: spark-pi-1505372339796-driver
+	 namespace: spark-cluster
+	 labels: spark-app-selector -&gt; spark-f4d3a5d3ad964a05a51feb6191d50357, spark-role -&gt; driver
+	 pod uid: 304cf440-991a-11e7-970c-f4e9d49f8ed0
+	 creation time: 2017-09-14T06:59:01Z
+	 service account name: spark
+	 volumes: spark-token-zr8wv
+	 node name: 172.20.0.114
+	 start time: 2017-09-14T06:59:01Z
+	 container images: sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1
+	 phase: Succeeded
+	 status: [ContainerStatus(containerID=docker://5c5c821c482a1e35552adccb567020532b79244392374f25754f0050e6cd4c62, image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1, imageID=docker-pullable://sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver@sha256:beb92a3e3f178e286d9e5baebdead88b5ba76d651f347ad2864bb6f8eda26f94, lastState=ContainerState(running=null, terminated=null, waiting=null, additionalProperties={}), name=spark-kubernetes-driver, ready=false, restartCount=0, state=ContainerState(running=null, terminated=ContainerStateTerminated(containerID=docker://5c5c821c482a1e35552adccb567020532b79244392374f25754f0050e6cd4c62, exitCode=0, finishedAt=2017-09-14T06:59:11Z, message=null, reason=Completed, signal=null, startedAt=null, additionalProperties={}), waiting=null, additionalProperties={}), additionalProperties={})]
+2017-09-14 14:59:12 INFO  LoggingPodStatusWatcherImpl:54 - Container final statuses:
+
+
+	 Container name: spark-kubernetes-driver
+	 Container image: sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1
+	 Container state: Terminated
+	 Exit code: 0
+2017-09-14 14:59:12 INFO  Client:54 - Application spark-pi finished.
+</code></pre>
+
+<p>从日志中可以看到任务运行的状态信息。</p>
+
+<p>使用下面的命令可以看到 kubernetes 启动的 Pod 信息：</p>
+
+<pre><code class="language-bash">kubectl --namespace spark-cluster get pods -w
+</code></pre>
+
+<p>将会看到 <code>spark-driver</code> 和 <code>spark-exec</code> 的 Pod 信息。</p>
+
+<h2 id="依赖管理">依赖管理</h2>
+
+<p>上文中我们在运行测试程序时，命令行中指定的 jar 文件已包含在 docker 镜像中，是不是说我们每次提交任务都需要重新创建一个镜像呢？非也！如果真是这样也太麻烦了。</p>
+
+<h4 id="创建-resource-staging-server">创建 resource staging server</h4>
+
+<p>为了方便用户提交任务，不需要每次提交任务的时候都创建一个镜像，我们使用了 <strong>resource staging server</strong> 。</p>
+
+<pre><code>kubectl create -f conf/kubernetes-resource-staging-server.yaml
+</code></pre>
+
+<p>我们同样将其部署在 <code>spark-cluster</code> namespace 下，该 yaml 文件见 <a href="https://github.com/rootsongjc/kubernetes-handbook">kubernetes-handbook</a> 的 <code>manifests/spark-with-kubernetes-native-scheduler</code> 目录。</p>
+
+<h4 id="优化">优化</h4>
+
+<p>其中有一点需要优化，在使用下面的命令提交任务时，使用 <code>--conf spark.kubernetes.resourceStagingServer.uri</code> 参数指定 <em>resource staging server</em> 地址，用户不应该关注 <em>resource staging server</em> 究竟运行在哪台宿主机上，可以使用下面两种方式实现：</p>
+
+<ul>
+  <li>使用 <code>nodeSelector</code> 将 <em>resource staging server</em> 固定调度到某一台机器上，该地址依然使用宿主机的 IP 地址</li>
+  <li>改变 <code>spark-resource-staging-service</code> service 的 type 为 <strong>ClusterIP</strong>， 然后使用 <strong>Ingress</strong> 将其暴露到集群外部，然后加入的内网 DNS 里，用户使用 DNS 名称指定 <em>resource staging server</em> 的地址。</li>
+</ul>
+
+<p>然后可以执行下面的命令来提交本地的 jar 到 kubernetes 上运行。</p>
+
+<pre><code class="language-bash">./spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.SparkPi \
+  --master k8s://https://172.20.0.113:6443 \
+  --kubernetes-namespace spark-cluster \
+  --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.executor.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-executor:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.initcontainer.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-init:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.resourceStagingServer.uri=http://172.20.0.114:31000 \
+  ../examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0-SNAPSHOT.jar
+</code></pre>
+
+<p>该命令将提交本地的 <code>../examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0-SNAPSHOT.jar</code> 文件到 <em>resource staging server</em>，executor 将从该 server 上获取 jar 包并运行，这样用户就不需要每次提交任务都编译一个镜像了。</p>
+
+<p>详见：https://apache-spark-on-k8s.github.io/userdocs/running-on-kubernetes.html#dependency-management</p>
+
+<h4 id="设置-hdfs-用户">设置 HDFS 用户</h4>
+
+<p>如果 Hadoop 集群没有设置 kerbros 安全认证的话，在指定 <code>spark-submit</code> 的时候可以通过指定如下四个环境变量， 设置 Spark 与 HDFS 通信使用的用户：</p>
+
+<pre><code class="language-bash">  --conf spark.kubernetes.driverEnv.SPARK_USER=hadoop 
+  --conf spark.kubernetes.driverEnv.HADOOP_USER_NAME=hadoop 
+  --conf spark.executorEnv.HADOOP_USER_NAME=hadoop 
+  --conf spark.executorEnv.SPARK_USER=hadoop 
+</code></pre>
+
+<p>使用 hadoop 用户提交本地 jar 包的命令示例：</p>
+
+<pre><code class="language-bash">./spark-submit \
+  --deploy-mode cluster \
+  --class com.talkingdata.alluxio.hadooptest \
+  --master k8s://https://172.20.0.113:6443 \
+  --kubernetes-namespace spark-cluster \
+  --conf spark.kubernetes.driverEnv.SPARK_USER=hadoop \
+  --conf spark.kubernetes.driverEnv.HADOOP_USER_NAME=hadoop \
+  --conf spark.executorEnv.HADOOP_USER_NAME=hadoop \
+  --conf spark.executorEnv.SPARK_USER=hadoop \
+  --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-driver:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.executor.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-executor:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.initcontainer.docker.image=sz-pg-oam-docker-hub-001.tendcloud.com/library/spark-init:v2.1.0-kubernetes-0.3.1-1 \
+  --conf spark.kubernetes.resourceStagingServer.uri=http://172.20.0.114:31000 \
+~/Downloads/tendcloud_2.10-1.0.jar
+</code></pre>
+
+<p>详见：https://github.com/apache-spark-on-k8s/spark/issues/408</p>
+
+<h4 id="限制-driver-和-executor-的资源使用">限制 Driver 和 Executor 的资源使用</h4>
+
+<p>在执行 <code>spark-submit</code> 时使用如下参数设置内存和 CPU 资源限制：</p>
+
+<pre><code class="language-bash">--conf spark.driver.memory=3G
+--conf spark.executor.memory=3G
+--conf spark.driver.cores=2
+--conf spark.executor.cores=10
+</code></pre>
+
+<p>这几个参数中值如何传递到 Pod 的资源设置中的呢？</p>
+
+<p>比如我们设置在执行 <code>spark-submit</code> 的时候传递了这样的两个参数：<code>--conf spark.driver.cores=2</code> 和 <code>--conf spark.driver.memory=100G</code> 那么查看 driver pod 的 yaml 输出结果将会看到这样的资源设置：</p>
+
+<pre><code class="language-yaml">    resources:
+      limits:
+        memory: 110Gi
+      requests:
+        cpu: "2"
+        memory: 100Gi
+</code></pre>
+
+<p>以上参数是对 <code>request</code> 值的设置，那么 <code>limit</code> 的资源设置的值又是从何而来？</p>
+
+<p>可以使用 <code>spark.kubernetes.driver.limit.cores</code> 和 <code>spark.kubernetes.executor.limit.cores</code> 来设置 CPU的 hard limit。</p>
+
+<p><code>SPARK_DRIVER_MEMORY</code> 和 <code>SPARK_EXECUTOR_MEMORY</code> 和分别作为 Driver 容器和 Executor 容器启动的环境变量，比如下面这个 Driver 启动的 CMD 中：</p>
+
+<pre><code class="language-bash">CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" &amp;&amp; \
+    env | grep SPARK_JAVA_OPT_ | sed 's/[^=]*=\(.*\)/\1/g' &gt; /tmp/java_opts.txt &amp;&amp; \
+    readarray -t SPARK_DRIVER_JAVA_OPTS &lt; /tmp/java_opts.txt &amp;&amp; \
+    if ! [ -z ${SPARK_MOUNTED_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_MOUNTED_CLASSPATH:$SPARK_CLASSPATH"; fi &amp;&amp; \
+    if ! [ -z ${SPARK_SUBMIT_EXTRA_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_SUBMIT_EXTRA_CLASSPATH:$SPARK_CLASSPATH"; fi &amp;&amp; \
+    if ! [ -z ${SPARK_EXTRA_CLASSPATH+x} ]; then SPARK_CLASSPATH="$SPARK_EXTRA_CLASSPATH:$SPARK_CLASSPATH"; fi &amp;&amp; \
+    if ! [ -z ${SPARK_MOUNTED_FILES_DIR+x} ]; then cp -R "$SPARK_MOUNTED_FILES_DIR/." .; fi &amp;&amp; \
+    if ! [ -z ${SPARK_MOUNTED_FILES_FROM_SECRET_DIR} ]; then cp -R "$SPARK_MOUNTED_FILES_FROM_SECRET_DIR/." .; fi &amp;&amp; \
+    ${JAVA_HOME}/bin/java "${SPARK_DRIVER_JAVA_OPTS[@]}" -cp $SPARK_CLASSPATH -Xms$SPARK_DRIVER_MEMORY -Xmx$SPARK_DRIVER_MEMORY $SPARK_DRIVER_CLASS $SPARK_DRIVER_ARGS
+</code></pre>
+
+<p>我们可以看到对 <code>SPARK_DRIVER_MEMORY</code> 环境变量的引用。Executor 的设置与 driver 类似。</p>
+
+<p>而我们可以使用这样的参数来传递环境变量的值 <code>spark.executorEnv.[EnvironmentVariableName]</code>，只要将 <code>EnvironmentVariableName</code> 替换为环境变量名称即可。</p>
+
+<h2 id="参考">参考</h2>
+
+<p><a href="http://lxw1234.com/archives/2015/12/593.htm">Spark动态资源分配-Dynamic Resource Allocation</a></p>
+
+<p><a href="https://apache-spark-on-k8s.github.io/userdocs/running-on-kubernetes.html">Running Spark on Kubernetes</a></p>
+
+<p><a href="https://issues.apache.org/jira/browse/SPARK-18278">Apache Spark Jira Issue - 18278 - SPIP: Support native submission of spark jobs to a kubernetes cluster</a></p>
+
+<p><a href="https://github.com/kubernetes/kubernetes/issues/34377">Kubernetes Github Issue - 34377 Support Spark natively in Kubernetes</a></p>
+
+<p><a href="https://github.com/kubernetes/kubernetes/tree/master/examples/spark">Kubernetes example spark</a></p>
+
+<p><a href="https://github.com/rootsongjc/spark-on-kubernetes">https://github.com/rootsongjc/spark-on-kubernetes</a></p>
+
+<p><a href="https://github.com/apache-spark-on-k8s/spark/blob/branch-2.2-kubernetes/resource-managers/kubernetes/architecture-docs/scheduler-backend.md">Scheduler backend</a></p>
+
+                </div>
+            
+             <!-- /container -->
+        </div>
+
+        <script src="js/vendor/jquery-1.8.0.min.js"></script>
+        <script src="js/vendor/bootstrap.min.js"></script>
+        <script src="js/vendor/anchor.min.js"></script>
+        <script src="js/main.js"></script>
+
+        <!-- MathJax Section -->
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                TeX: { equationNumbers: { autoNumber: "AMS" } }
+            });
+        </script>
+        <script>
+            // Note that we load MathJax this way to work with local file (file://), HTTP and HTTPS.
+            // We could use "//cdn.mathjax...", but that won't support "file://".
+            (function(d, script) {
+                script = d.createElement('script');
+                script.type = 'text/javascript';
+                script.async = true;
+                script.onload = function(){
+                    MathJax.Hub.Config({
+                        tex2jax: {
+                            inlineMath: [ ["$", "$"], ["\\\\(","\\\\)"] ],
+                            displayMath: [ ["$$","$$"], ["\\[", "\\]"] ],
+                            processEscapes: true,
+                            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+                        }
+                    });
+                };
+                script.src = ('https:' == document.location.protocol ? 'https://' : 'http://') +
+                    'cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+                d.getElementsByTagName('head')[0].appendChild(script);
+            }(document));
+        </script>
+    </body>
+</html>
