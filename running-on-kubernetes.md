@@ -9,14 +9,14 @@ title: 在 Kubernetes 上运行 Spark
 
 - 您必须要有一个 kubernetes 集群，并且能通过 [kubectl](https://kubernetes.io/docs/user-guide/prereqs/) 命令访问到。如果在本地测试，你需要在自己的本地环境下安装 [minikube](https://kubernetes.io/docs/getting-started-guides/minikube/)。
   - 我们建议安装最新的 minikube 版本（本文档中使用的0.19.0版本），老版本中可能缺少一些必要组件。
-- 您必须要有在集群中执行 create 和 list [pod](https://kubernetes.io/docs/user-guide/pods/)、[ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/) 还有 [secrets](https://kubernetes.io/docs/concepts/configuration/secret/) 的权限。您可以使用以下命令来验证： `kubectl get pods`、 `kubectl get configmap`、 `kubectl get secrets` ，确定是否可以获取这些对的信息。
+- 您必须要有在集群中执行 create 和 list [pod](https://kubernetes.io/docs/user-guide/pods/)、[ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/) 还有 [secrets](https://kubernetes.io/docs/concepts/configuration/secret/) 的权限。您可以使用以下命令来验证： `kubectl get pods`、 `kubectl get configmaps`、 `kubectl get secrets` ，确定是否可以获取这些对的信息。
 - 您必须有一个支持 Kuberentes 的 spark 发行版。可以通过以下两种方式获取：
   - [release tarball](https://github.com/apache-spark-on-k8s/spark/releases) 下载编译好的软件包
   - [自行编译支持 kuberentes 的 spark 发行版](https://github.com/apache-spark-on-k8s/spark/blob/branch-2.2-kubernetes/resource-managers/kubernetes/README.md#building-spark-with-kubernetes-support)
 
 **我们接下来都会基于 kuberentes 1.6 版本来测试。**
 
-## Driver & Executor 镜像
+## Docker 镜像
 
 因为向 kubernetes 中提交的任务必须要有镜像，spark 程序要运行在 pod 中，也必须提供镜像，我们使用 docker 来构建镜像和作为容器的运行时环境。
 
@@ -26,33 +26,33 @@ title: 在 Kubernetes 上运行 Spark
 <tr><th>组件</th><th>镜像</th></tr>
 <tr>
   <td>Spark Driver Image</td>
-  <td><code>kubespark/spark-driver:v2.1.0-kubernetes-0.3.1</code></td>
+  <td><code>kubespark/spark-driver:v2.2.0-kubernetes-0.4.0</code></td>
 </tr>
 <tr>
   <td>Spark Executor Image</td>
-  <td><code>kubespark/spark-executor:v2.1.0-kubernetes-0.3.1</code></td>
+  <td><code>kubespark/spark-executor:v2.2.0-kubernetes-0.4.0</code></td>
 </tr>
 <tr>
   <td>Spark Initialization Image</td>
-  <td><code>kubespark/spark-init:v2.1.0-kubernetes-0.3.1</code></td>
+  <td><code>kubespark/spark-init:v2.2.0-kubernetes-0.4.0</code></td>
 </tr>
 <tr>
   <td>Spark Staging Server Image</td>
-  <td><code>kubespark/spark-resource-staging-server:v2.1.0-kubernetes-0.3.1</code></td>
+  <td><code>kubespark/spark-resource-staging-server:v2.2.0-kubernetes-0.4.0</code></td>
 </tr>
 <tr>
   <td>PySpark Driver Image</td>
-  <td><code>kubespark/driver-py:v2.1.0-kubernetes-0.3.1</code></td>
+  <td><code>kubespark/driver-py:v2.2.0-kubernetes-0.4.0</code></td>
 </tr>
 <tr>
   <td>PySpark Executor Image</td>
-  <td><code>kubespark/executor-py:v2.1.0-kubernetes-0.3.1</code></td>
+  <td><code>kubespark/executor-py:v2.2.0-kubernetes-0.4.0</code></td>
 </tr>
 </table>
 
 ### 镜像版本说明
 
-**0.3.1**
+**0.4.0**
 
 - Spark-submit 提交任务时不支持指定 kubernetes 的 serviceaccount，当 kubernetes 集群启用了 RBAC 的时候，将会出现权限错误。
 
@@ -109,9 +109,9 @@ bin/spark-submit \
   --kubernetes-namespace default \
   --conf spark.executor.instances=5 \
   --conf spark.app.name=spark-pi \
-  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.2.0-kubernetes-0.4.0 \
   local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
 ```
 
@@ -143,10 +143,10 @@ bin/spark-submit \
   --kubernetes-namespace <k8s-namespace> \
   --conf spark.executor.instances=5 \
   --conf spark.app.name=spark-pi \
-  --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar \
+  --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.2.0-kubernetes-0.4.0 \
+  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0-SNAPSHOT.jar \
   local:///opt/spark/examples/src/main/python/pi.py 10
 ```
 
@@ -160,10 +160,10 @@ bin/spark-submit \
   --kubernetes-namespace <k8s-namespace> \
   --conf spark.executor.instances=5 \
   --conf spark.app.name=spark-pi \
-  --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
-  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.1.0-k8s-0.3.1-SNAPSHOT.jar \
+  --conf spark.kubernetes.driver.docker.image=kubespark/driver-py:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/executor-py:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.2.0-kubernetes-0.4.0 \
+  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0-SNAPSHOT.jar \
   --py-files local:///opt/spark/examples/src/main/python/sort.py \
   local:///opt/spark/examples/src/main/python/pi.py 10
 ```
@@ -224,9 +224,9 @@ bin/spark-submit \
   --kubernetes-namespace default \
   --conf spark.executor.instances=5 \
   --conf spark.app.name=spark-pi \
-  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.2.0-kubernetes-0.4.0 \
   --conf spark.kubernetes.resourceStagingServer.uri=http://<address-of-any-cluster-node>:31000 \
   examples/jars/spark_examples_2.11-2.2.0.jar
 ```
@@ -259,9 +259,9 @@ bin/spark-submit \
   --kubernetes-namespace default \
   --conf spark.executor.instances=5 \
   --conf spark.app.name=spark-pi \
-  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.2.0-kubernetes-0.4.0 \
   local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar
 ```
 
@@ -271,15 +271,13 @@ Spark 跟 Kubernetes 集群之间交互使用的是 fabric8 的 kubernetes-clien
 
 ## 动态 Executor Scale
 
-Spark on Kubernetes supports Dynamic Allocation with cluster mode. This mode requires running
-an external shuffle service. This is typically a [daemonset](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) with a provisioned [hostpath](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath) volume.
-This shuffle service may be shared by executors belonging to different SparkJobs. Using Spark with dynamic allocation on Kubernetes assumes that a cluster administrator has set up one or more shuffle-service daemonsets in the cluster.
+Spark on Kubernetes 支持 cluster mode 下的动态分配。该模式需要运行一个外部 shuffle service，通常是以一个注入 [hostpath](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath) 的 [daemonset](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) 的方式来运行。该 shuffle service 可以在不同的 spark jobs 之间共享。在 kubernetes 中使用 spark 的动态分配功能，集群管理员必须在集群中启动一个或者多个 shuffle-service daemonset。
 
-A sample configuration file is provided in `conf/kubernetes-shuffle-service.yaml` which can be customized as needed for a particular cluster. It is important to note that `spec.template.metadata.labels` are setup appropriately for the shuffle service because there may be multiple shuffle service instances running in a cluster. The labels give Spark applications a way to target a particular shuffle service.
+在 `conf/kubernetes-shuffle-service.yaml` 目录下有一个 shuffle service 的配置，用户可以根据自己的集群来定制。注意**恰当的设置** `spec.template.metadata.labels` ，因为在集群中可能有多个 shuffle service 实例。该 Label 用于 spark 应用定位到不同的 shuffle service。
 
-For example, if the shuffle service we want to use is in the default namespace, and has pods with labels `app=spark-shuffle-service` and `spark-version=2.1.0`, we can use those tags to target that particular shuffle service at job launch time. In order to run a job with dynamic allocation enabled, the command may then look like the following:
+例如，我们想使用一个位于 default namespace 下的 shuffle service，pod 的 label 有 `app=spark-shuffle-service` 和 `spark-version=2.2.0`，我们想要在提交任务时用这些 tag 来定位到某个 shuffle service。为了使用动态分配，我们提交任务时应该这样写：
 
-```
+```bash
 bin/spark-submit \
   --deploy-mode cluster \
   --class org.apache.spark.examples.GroupByTest \
@@ -291,9 +289,11 @@ bin/spark-submit \
   --conf spark.dynamicAllocation.enabled=true \
   --conf spark.shuffle.service.enabled=true \
   --conf spark.kubernetes.shuffle.namespace=default \
-  --conf spark.kubernetes.shuffle.labels="app=spark-shuffle-service,spark-version=2.1.0" \
+  --conf spark.kubernetes.shuffle.labels="app=spark-shuffle-service,spark-version=2.2.0" \
   local:///opt/spark/examples/jars/spark_examples_2.11-2.2.0.jar 10 400000 2
 ```
+
+注意其中 `spark.kubernetes.shuffle.labels` 的值。
 
 ## 高级
 
@@ -307,7 +307,7 @@ Refer to the [security](security.html) page for the available settings related t
 In addition to the settings specified by the previously linked security page, the resource staging server supports the following additional configurations:
 
 <table class="table">
-<tr><th>Property Name</th><th>Default</th><th>Meaning</th></tr>
+<tr><th>属性名称</th><th>默认值</th><th>含义</th></tr>
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.keyPem</code></td>
   <td>(none)</td>
@@ -366,9 +366,9 @@ bin/spark-submit \
   --kubernetes-namespace default \
   --conf spark.executor.instances=5 \
   --conf spark.app.name=spark-pi \
-  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.1.0-kubernetes-0.3.1 \
-  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.1.0-kubernetes-0.3.1 \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.initcontainer.docker.image=kubespark/spark-init:v2.2.0-kubernetes-0.4.0 \
   --conf spark.kubernetes.resourceStagingServer.uri=https://<address-of-any-cluster-node>:31000 \
   --conf spark.ssl.kubernetes.resourceStagingServer.enabled=true \
   --conf spark.ssl.kubernetes.resourceStagingServer.clientCertPem=/home/myuser/cert.pem \
@@ -387,8 +387,7 @@ bin/spark-submit \
   <td>
 
 The namespace that will be used for running the driver and executor pods. When using
-<code>spark-submit</code> in cluster mode, this can also be passed to <code>spark-submit</code> via the
-<code>--kubernetes-namespace</code> command line argument.
+<code>spark-submit</code> in cluster mode, this can also be passed to <code>spark-submit</code> via the <code>--kubernetes-namespace</code> command line argument.
 
   </td>
 </tr>
@@ -397,8 +396,7 @@ The namespace that will be used for running the driver and executor pods. When u
   <td><code>spark-driver:2.2.0</code></td>
   <td>
 
-Docker image to use for the driver. Specify this using the standard
-<a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> format.
+Driver docker 镜像。 使用标注的<a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> 格式。
 
   </td>
 </tr>
@@ -407,8 +405,7 @@ Docker image to use for the driver. Specify this using the standard
   <td><code>spark-executor:2.2.0</code></td>
   <td>
 
-Docker image to use for the executors. Specify this using the standard
-<a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> format.
+Executor docker 镜像。 使用标注的<a href="https://docs.docker.com/engine/reference/commandline/tag/">Docker tag</a> 格式。
 
   </td>
 </tr>
@@ -444,7 +441,7 @@ Labels that will be used to look up shuffle service pods. This should be a comma
   <td><code>5</code></td>
   <td>
 
-Number of pods to launch at once in each round of executor pod allocation.
+每一轮 executor pod 分配时启动的 pod 个数。
 
   </td>
 </tr>
@@ -453,7 +450,7 @@ Number of pods to launch at once in each round of executor pod allocation.
   <td><code>1</code></td>
   <td>
 
-Number of seconds to wait between each round of executor pod allocation.
+每一轮 executor pod 分配时等待的秒数。
 
   </td>
 </tr>
@@ -595,13 +592,8 @@ File containing the OAuth token to use when authenticating against the against t
 Whether or not to use a service account token and a service account CA certificate when the resource staging server authenticates to Kubernetes. If this is set, interactions with Kubernetes will authenticate using a token located at
 <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code> and the CA certificate located at
 <code>/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</code>. Note that if
-<code>spark.kubernetes.authenticate.resourceStagingServer.oauthTokenFile</code> is set, it takes precedence
-over the usage of the service account token file. Also, if
-<code>spark.kubernetes.authenticate.resourceStagingServer.caCertFile</code> is set, it takes precedence over using
-the service account's CA certificate file. This generally should be set to true (the default value) when the
-resource staging server is deployed as a Kubernetes pod, but should be set to false if the resource staging server
-is deployed by other means (i.e. when running the staging server process outside of Kubernetes). The resource
-staging server must have credentials that allow it to view API objects in any namespace.
+<code>spark.kubernetes.authenticate.resourceStagingServer.oauthTokenFile</code> is set, it takes precedence over the usage of the service account token file. Also, if
+<code>spark.kubernetes.authenticate.resourceStagingServer.caCertFile</code> is set, it takes precedence over using the service account's CA certificate file. This generally should be set to true (the default value) when the resource staging server is deployed as a Kubernetes pod, but should be set to false if the resource staging server is deployed by other means (i.e. when running the staging server process outside of Kubernetes). The resource staging server must have credentials that allow it to view API objects in any namespace.
 
   </td>
 </tr>
@@ -615,7 +607,7 @@ The amount of off-heap memory (in megabytes) to be allocated per executor. This 
   </td>
 </tr>
 <tr>
-  <td><code>spark.kubernetes.driver.labels</code></td>
+  <td><code>spark.kubernetes.driver.label.[LabelName]</code></td>
   <td>(none)</td>
   <td>
 
@@ -624,33 +616,30 @@ Custom labels that will be added to the driver pod. This should be a comma-separ
   </td>
 </tr>
 <tr>
-  <td><code>spark.kubernetes.driver.annotations</code></td>
+  <td><code>spark.kubernetes.driver.annotation.[AnnotationName]</code></td>
   <td>(none)</td>
   <td>
 
-Custom annotations that will be added to the driver pod. This should be a comma-separated list of label key-value
-pairs, where each annotation is in the format <code>key=value</code>.
+ Add the annotation specified by <code>AnnotationName</code> to the driver pod. For example, <code>spark.kubernetes.driver.annotation.something=true</code>.
+
+</td>
+
+</tr>
+<tr>
+  <td><code>spark.kubernetes.executor.label.[LabelName]</code></td>
+  <td>(none)</td>
+  <td>
+
+Add the label specified by <code>LabelName</code> to the executor pods. For example, <code>spark.kubernetes.executor.label.something=true</code>. Note that Spark also adds its own labels to the driver pod for bookkeeping purposes.
 
   </td>
 </tr>
 <tr>
-  <td><code>spark.kubernetes.executor.labels</code></td>
+  <td><code>spark.kubernetes.executor.annotation.[AnnotationName]</code></td>
   <td>(none)</td>
   <td>
 
-Custom labels that will be added to the executor pods. This should be a comma-separated list of label key-value
-pairs, where each label is in the format <code>key=value</code>. Note that Spark also adds its own labels to the
-executor pods for bookkeeping purposes.
-
-  </td>
-</tr>
-<tr>
-  <td><code>spark.kubernetes.executor.annotations</code></td>
-  <td>(none)</td>
-  <td>
-
-Custom annotations that will be added to the executor pods. This should be a comma-separated list of annotation
-key-value pairs, where each annotation is in the format <code>key=value</code>.
+Add the annotation specified by <code>AnnotationName</code> to the executor pods. For example, <code>spark.kubernetes.executor.annotation.something=true</code>.
 
   </td>
 </tr>
@@ -659,8 +648,7 @@ key-value pairs, where each annotation is in the format <code>key=value</code>.
   <td>(none)</td>
   <td>
 
-Name of the driver pod. If not set, the driver pod name is set to "spark.app.name" suffixed by the current timestamp
-to avoid name conflicts.
+Driver pod 的名字。如果未设置，driver pod 的名字将被设置为”spark.app.name“ 加上当前时间戳作为后缀，以避免冲突。
 
   </td>
 </tr>
@@ -669,8 +657,7 @@ to avoid name conflicts.
   <td><code>true</code></td>
   <td>
 
-In cluster mode, whether to wait for the application to finish before exiting the launcher process.  When changed to
-false, the launcher has a "fire-and-forget" behavior when launching the Spark job.
+In cluster mode, whether to wait for the application to finish before exiting the launcher process.  When changed to false, the launcher has a "fire-and-forget" behavior when launching the Spark job.
 
   </td>
 </tr>
@@ -679,7 +666,7 @@ false, the launcher has a "fire-and-forget" behavior when launching the Spark jo
   <td><code>10000</code></td>
   <td>
 
-Port for the resource staging server to listen on when it is deployed.
+Resource staging server 部署后监听的端口。
 
   </td>
 </tr>
@@ -688,10 +675,7 @@ Port for the resource staging server to listen on when it is deployed.
   <td>(none)</td>
   <td>
 
-URI of the resource staging server that Spark should use to distribute the application's local dependencies. Note
-that by default, this URI must be reachable by both the submitting machine and the pods running in the cluster. If
-one URI is not simultaneously reachable both by the submitter and the driver/executor pods, configure the pods to
-access the staging server at a different URI by setting
+URI of the resource staging server that Spark should use to distribute the application's local dependencies. Note that by default, this URI must be reachable by both the submitting machine and the pods running in the cluster. If one URI is not simultaneously reachable both by the submitter and the driver/executor pods, configure the pods to access the staging server at a different URI by setting
 <code>spark.kubernetes.resourceStagingServer.internal.uri</code> as discussed below.
 
   </td>
@@ -701,10 +685,7 @@ access the staging server at a different URI by setting
   <td>Value of <code>spark.kubernetes.resourceStagingServer.uri</code></td>
   <td>
 
-URI of the resource staging server to communicate with when init-containers bootstrap the driver and executor pods
-with submitted local dependencies. Note that this URI must by the pods running in the cluster. This is useful to
-set if the resource staging server has a separate "internal" URI that must be accessed by components running in the
-cluster.
+URI of the resource staging server to communicate with when init-containers bootstrap the driver and executor pods with submitted local dependencies. Note that this URI must by the pods running in the cluster. This is useful to set if the resource staging server has a separate "internal" URI that must be accessed by components running in the cluster.
 
   </td>
 </tr>
@@ -714,10 +695,7 @@ cluster.
   <td>
 
 Location of the trustStore file to use when communicating with the resource staging server over TLS, as
-init-containers bootstrap the driver and executor pods with submitted local dependencies. This can be a URI with a
-scheme of <code>local://</code>, which denotes that the file is pre-mounted on the pod's disk. A uri without a
-scheme or a scheme of <code>file://</code> will result in this file being mounted from the submitting machine's
-disk as a secret into the init-containers.
+init-containers bootstrap the driver and executor pods with submitted local dependencies. This can be a URI with a scheme of <code>local://</code>, which denotes that the file is pre-mounted on the pod's disk. A uri without a scheme or a scheme of <code>file://</code> will result in this file being mounted from the submitting machine's disk as a secret into the init-containers.
 
   </td>
 </tr>
@@ -726,8 +704,7 @@ disk as a secret into the init-containers.
   <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.trustStorePassword</code></td>
   <td>
 
-Password of the trustStore file that is used when communicating with the resource staging server over TLS, as
-init-containers bootstrap the driver and executor pods with submitted local dependencies.
+Password of the trustStore file that is used when communicating with the resource staging server over TLS, as init-containers bootstrap the driver and executor pods with submitted local dependencies.
 
   </td>
 </tr>
@@ -736,8 +713,7 @@ init-containers bootstrap the driver and executor pods with submitted local depe
   <td>Value of <code>spark.ssl.kubernetes.resourceStagingServer.trustStoreType</code></td>
   <td>
 
-Type of the trustStore file that is used when communicating with the resource staging server over TLS, when
-init-containers bootstrap the driver and executor pods with submitted local dependencies.
+Type of the trustStore file that is used when communicating with the resource staging server over TLS, when init-containers bootstrap the driver and executor pods with submitted local dependencies.
 
   </td>
 </tr>
@@ -747,10 +723,7 @@ init-containers bootstrap the driver and executor pods with submitted local depe
   <td>
 
 Location of the certificate file to use when communicating with the resource staging server over TLS, as
-init-containers bootstrap the driver and executor pods with submitted local dependencies. This can be a URI with a
-scheme of <code>local://</code>, which denotes that the file is pre-mounted on the pod's disk. A uri without a
-scheme or a scheme of <code>file://</code> will result in this file being mounted from the submitting machine's
-disk as a secret into the init-containers.
+init-containers bootstrap the driver and executor pods with submitted local dependencies. This can be a URI with a scheme of <code>local://</code>, which denotes that the file is pre-mounted on the pod's disk. A uri without a scheme or a scheme of <code>file://</code> will result in this file being mounted from the submitting machine's disk as a secret into the init-containers.
 
   </td>
 </tr>
@@ -759,8 +732,7 @@ disk as a secret into the init-containers.
   <td><code>/var/spark-data/spark-jars</code></td>
   <td>
 
-Location to download jars to in the driver and executors. This will be mounted as an empty directory volume
-into the driver and executor containers.
+下载 Jar 包到 driver 和 executor 中的路径。该路径将作为 empty dir volume 挂载到 driver 和 executor 容器中。
 
   </td>
 </tr>
@@ -769,8 +741,7 @@ into the driver and executor containers.
   <td><code>/var/spark-data/spark-files</code></td>
   <td>
 
-Location to download files to in the driver and executors. This will be mounted as an empty directory volume
-into the driver and executor containers.
+下载文件到 driver 和 executor 中的路径。该路径将作为 empty dir volume 挂载到 driver 和 executor 容器中。
 
   </td>
 </tr>
@@ -779,7 +750,7 @@ into the driver and executor containers.
   <td><code>1s</code></td>
   <td>
 
-Interval between reports of the current Spark job status in cluster mode.
+在 cluster  mode 下报告当前 spark job 状态的时间间隔。
 
   </td>
 </tr>
@@ -788,7 +759,7 @@ Interval between reports of the current Spark job status in cluster mode.
   <td><code>IfNotPresent</code></td>
   <td>
 
-Docker image pull policy used when pulling Docker images with Kubernetes.
+Kubernetes 中的 docker 镜像拉取策略。
 
   </td>
 </tr>
@@ -797,7 +768,7 @@ Docker image pull policy used when pulling Docker images with Kubernetes.
    <td>(none)</td>
    <td>
 
- Specify the hard cpu limit for the driver pod
+指定 driver pod 的 hard cpu limit。
 
    </td>
  </tr>
@@ -806,7 +777,7 @@ Docker image pull policy used when pulling Docker images with Kubernetes.
    <td>(none)</td>
    <td>
 
- Specify the hard cpu limit for a single executor pod
+指定单个 executor pod 的 hard cpu limit。
 
    </td>
  </tr>
@@ -815,10 +786,7 @@ Docker image pull policy used when pulling Docker images with Kubernetes.
    <td>(none)</td>
    <td>
 
- Adds to the node selector of the driver pod and executor pods, with key <code>labelKey</code> and the value as the 
- configuration's value. For example, setting <code>spark.kubernetes.node.selector.identifier</code> to <code>myIdentifier</code>
- will result in the driver pod and executors having a node selector with key <code>identifier</code> and value 
-  <code>myIdentifier</code>. Multiple node selector keys can be added by setting multiple configurations with this prefix.
+ Adds to the node selector of the driver pod and executor pods, with key <code>labelKey</code> and the value as the  configuration's value. For example, setting <code>spark.kubernetes.node.selector.identifier</code> to <code>myIdentifier</code> will result in the driver pod and executors having a node selector with key <code>identifier</code> and value   <code>myIdentifier</code>. Multiple node selector keys can be added by setting multiple configurations with this prefix.
 </td>
 
   </tr>
