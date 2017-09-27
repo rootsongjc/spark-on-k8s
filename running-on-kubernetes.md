@@ -599,10 +599,10 @@ Whether or not to use a service account token and a service account CA certifica
 </tr>
 <tr>
   <td><code>spark.kubernetes.executor.memoryOverhead</code></td>
-  <td>executorMemory * 0.10, with minimum of 384</td>
+  <td>executor 内存 * 0.10，最小值是 384M</td>
   <td>
 
-The amount of off-heap memory (in megabytes) to be allocated per executor. This is memory that accounts for things like VM overheads, interned strings, other native overheads, etc. This tends to grow with the executor size (typically 6-10%).
+分配给每个 executor 的超过 heap 内存的值（M）。该值用于虚拟机的开销、其他本地服务开销。根据 executor 的大小设置（通常是 6%到10%）。
 
   </td>
 </tr>
