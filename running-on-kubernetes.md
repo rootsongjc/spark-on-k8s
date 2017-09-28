@@ -132,9 +132,8 @@ Kubernetes master is running at http://127.0.0.1:8080
 
 ## Python 支持
 
-随着 Python 在数据科学领域的广泛应用，我们增加了 PySpark 的支持。
-These applications follow the general syntax that you would expect from other cluster managers. The submission of a PySpark job is similar to the submission of Java/Scala applications except you do not supply a class, as expected. 
-Here is how you would execute a Spark-Pi example:
+随着 Python 在数据科学领域的广泛应用，我们增加了 PySpark 的支持。提交 PySpark 任务跟提交 Java/Scala 应用程序类似，不过不需要再指定 class。 
+我们这样执行 Spark-Pi 示例：
 
 ```bash
 bin/spark-submit \
@@ -150,8 +149,9 @@ bin/spark-submit \
   local:///opt/spark/examples/src/main/python/pi.py 10
 ```
 
-With Python support it is expected to distribute `.egg`, `.zip` and `.py` libraries to executors via the `--py-files` option. 
-​We support this as well, as seen with the following example:   
+为了支持 Python，可以使用 `--py-files` 选项为 executor 指定分布式的 `.egg`、`.zip` 和 `.py` 库。
+
+例如下面的示例：
 
 ```bash
 bin/spark-submit \
@@ -168,7 +168,7 @@ bin/spark-submit \
   local:///opt/spark/examples/src/main/python/pi.py 10
 ```
 
-You may also customize your Docker images to use different `pip` packages that suit your use-case. As you can see with the current `driver-py` Docker image we have commented out the current pip module support that you can uncomment to use:
+您也可以自定义 Docker 使用不同的 `pip` 包来满足自己的使用场景。从当前得 `driver-py` Docker 镜像的 Dockerfile 中您可以看到我们注释掉了一些 pip 模块，如果您要使用的话可以取消注释。
 
 ```dockerfile
 ...
@@ -186,7 +186,7 @@ RUN apk add --no-cache python && \
 ...
 ```
 
-And bake into your docker image whichever PySpark files you wish to include by merely appending to the following exec command with your appropriate file (i.e. MY_SPARK_FILE)
+不管想要引入什么 PySpark 文件，只要在 Dockerfile 中的 exec 位置追加（即 MY_SPARK_FILE）。
 
 ```dockerfile
 ...
@@ -335,10 +335,9 @@ Certificate file encoded in PEM format that the resource staging server uses to 
   <td>(none)</td>
   <td>
 
-Provides the KeyStore password through a file in the container instead of a static value. This is useful if the
-keyStore's password is to be mounted into the container with a secret.
+通过文件提供 KeyStore 密码而不是通过静态值。这当 keyStore 的密码是通过 secret 挂载到容器中的时候很有用。
+</td>
 
-  </td>
 </tr>
 <tr>
   <td><code>spark.ssl.kubernetes.resourceStagingServer.keyPasswordFile</code></td>
@@ -351,8 +350,7 @@ Provides the keyStore's key password using a file in the container instead of a 
 </tr>
 </table>
 
-Note that while the properties can be set in the ConfigMap, you will still need to consider the means of mounting the appropriate secret files into the resource staging server's container. A common mechanism that is used for this is to use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) that are mounted as secret
-volumes. Refer to the appropriate Kubernetes documentation for guidance and adjust the resource staging server's pecification in the provided YAML file accordingly.
+Note that while the properties can be set in the ConfigMap, you will still need to consider the means of mounting the appropriate secret files into the resource staging server's container. A common mechanism that is used for this is to use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) that are mounted as secret volumes. Refer to the appropriate Kubernetes documentation for guidance and adjust the resource staging server's pecification in the provided YAML file accordingly.
 
 Finally, when you submit your application, you must specify either a trustStore or a PEM-encoded certificate file to communicate with the resource staging server over TLS. The trustStore can be set with
 `spark.ssl.kubernetes.resourceStagingServer.trustStore`, or a certificate file can be set with
