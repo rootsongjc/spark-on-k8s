@@ -5,7 +5,7 @@ title: Spark属性配置
 
 Spark on kubernetes 在原生 spark 的基础上又增加了一些对 kubernetes 支持的配置文件，在下面的配置中凡是属性中包含 **kubernetes** 的属性都是新增内容，只有在支持 kubernetes 的 spark 版本中才生效。
 
-下面是单独针对 spark on kubernetes 的一些配置。其他配置项就跟使用 YARN 或 Mesos 运行一样。查看 [配置页面](configuration.html) 获取更多信息。
+下面是单独针对 spark on kubernetes 的一些配置。其他配置项就跟使用 YARN 或 Mesos 运行一样。查看 [配置页面](https://spark.apache.org/docs/latest/configuration.html) 获取更多信息。
 
 <table class="table">
 <tr><th>属性名称</th><th>默认值</th><th>含义</th></tr>
