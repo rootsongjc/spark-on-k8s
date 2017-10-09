@@ -351,14 +351,13 @@ CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" &amp;&amp; \
 
 <h2 id="高级">高级</h2>
 
-<h3 id="使用-tls-加密-the-resource-staging-server">使用 TLS 加密 the Resource Staging Server</h3>
+<h3 id="使用-tls-加密-resource-staging-server">使用 TLS 加密 Resource Staging Server</h3>
 
-<p>The default configuration of the resource staging server is not secured with TLS. It is highly recommended to configure this to protect the secrets and jars/files being submitted through the staging server.</p>
+<p>Resource staging server 默认不启用 TLS 加密。我们建议您启用该配置以加密提交到 Resource Staging Server 的 jar 包和文件。</p>
 
-<p>The YAML file in <code>conf/kubernetes-resource-staging-server.yaml</code> includes a ConfigMap resource that holds the resource staging server&#8217;s configuration. The properties can be adjusted here to make the resource staging server listen over TLS.
-Refer to the <a href="security.html">security</a> page for the available settings related to TLS. The namespace for the resource staging server is <code>kubernetes.resourceStagingServer</code>, so for example the path to the server&#8217;s keyStore would be set by <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>.</p>
+<p>该文件<code>conf/kubernetes-resource-staging-server.yaml</code> 中包含了 Resource Staging Server 配置的 ConfigMap。可以在这里调整属性以使 Resource Staging Server 通过TLS进行侦听。请参阅 <a href="security.html">安全</a> 页面获取关于 TLS 配置的更多信息。Resource Staging Server 的 namespace 是 <code>kubernetes.resourceStagingServer</code>，该 Server 的 keyStore 应该配置成<code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>。</p>
 
-<p>In addition to the settings specified by the previously linked security page, the resource staging server supports the following additional configurations:</p>
+<p>除了上面安全链接中的配置之外，Resource Staging Server 还支持下列配置。</p>
 
 <table class="table">
 <tr><th>属性名称</th><th>默认值</th><th>含义</th></tr>
@@ -378,9 +377,9 @@ Private key file encoded in PEM format that the resource staging server uses to 
   <td>(none)</td>
   <td>
 
-Certificate file encoded in PEM format that the resource staging server uses to secure connections over TLS. If this is specified, the associated private key file must be specified in
-<code>spark.ssl.kubernetes.resourceStagingServer.keyPem</code>. PEM files and a keyStore file (set by
-<code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>) cannot both be specified at the same time.
+证书文件以PEM格式编码，Resource Staging Server 使用它来进行TLS保护连接。如果指定，则必须在
+
+<code>spark.ssl.kubernetes.resourceStagingServer.keyPem</code> 中指定关联的私钥文件。 PEM 文件和 keyStore 文件（通过 <code>spark.ssl.kubernetes.resourceStagingServer.keyStore</code>) 来设置的不能同时设定。
 
   </td>
 </tr>
@@ -398,7 +397,7 @@ Certificate file encoded in PEM format that the resource staging server uses to 
   <td>(none)</td>
   <td>
 
-Provides the keyStore's key password using a file in the container instead of a static value. This is useful if the keyStore's key password is to be mounted into the container with a secret.
+用容器中的文件提供keyStore的密钥密码，而不是静态值。如果keyStore的密钥密码使用 secret 挂载到容器中的话这很有用。
 
   </td>
 </tr>
