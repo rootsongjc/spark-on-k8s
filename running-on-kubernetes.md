@@ -7,7 +7,8 @@ title: 在 Kubernetes 上运行 Spark
 
 ## 先决条件
 
-- 您必须要有一个 kubernetes 集群，并且能通过 [kubectl](https://kubernetes.io/docs/user-guide/prereqs/) 命令访问到。如果在本地测试，你需要在自己的本地环境下安装 [minikube](https://kubernetes.io/docs/getting-started-guides/minikube/)。
+- 您必须要有一个 kubernetes 集群，支持的最低版本为1.6，并且要安装了 [kube-dns](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
+- ) 并且能通过 [kubectl](https://kubernetes.io/docs/user-guide/prereqs/) 命令访问到。如果在本地测试，你需要在自己的本地环境下安装 [minikube](https://kubernetes.io/docs/getting-started-guides/minikube/)。
   - 我们建议安装最新的 minikube 版本（本文档中使用的0.19.0版本），老版本中可能缺少一些必要组件。
 - 您必须要有在集群中执行 create 和 list [pod](https://kubernetes.io/docs/user-guide/pods/)、[ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configmap/) 还有 [secrets](https://kubernetes.io/docs/concepts/configuration/secret/) 的权限。您可以使用以下命令来验证： `kubectl get pods`、 `kubectl get configmaps`、 `kubectl get secrets` ，确定是否可以获取这些对的信息。
 - 您必须有一个支持 Kuberentes 的 spark 发行版。可以通过以下两种方式获取：
