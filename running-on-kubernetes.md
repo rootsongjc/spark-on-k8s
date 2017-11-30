@@ -270,6 +270,17 @@ Spark 跟 Kubernetes 集群之间交互使用的是 fabric8 的 kubernetes-clien
 
 当我们使用的是 fabric8  的 kubernetes-client 所不支持的认证机制时可以使用 `kubectl proxy`。它目前支持X509 Client Certs 和 OAuth tokens。
 
+## 访问 Driver UI
+
+使用 `kubectl port-forward` 来访问 spark Driver 的 UI。
+
+```bash
+kubectl port-forward <driver-pod-name> 4040:4040
+```
+
+然后，通过 http://localhost:4040 访问。
+
+
 ## 动态 Executor Scale
 
 Spark on Kubernetes 支持 cluster mode 下的动态分配。该模式需要运行一个外部 shuffle service，通常是以一个注入 [hostpath](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath) 的 [daemonset](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) 的方式来运行。该 shuffle service 可以在不同的 spark jobs 之间共享。在 kubernetes 中使用 spark 的动态分配功能，集群管理员必须在集群中启动一个或者多个 shuffle-service daemonset。
