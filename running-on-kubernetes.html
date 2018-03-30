@@ -76,8 +76,7 @@
 <h2 id="先决条件">先决条件</h2>
 
 <ul>
-  <li>您必须要有一个 kubernetes 集群，支持的最低版本为1.6，并且要安装了 [kube-dns](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/</li>
-  <li>) 并且能通过 <a href="https://kubernetes.io/docs/user-guide/prereqs/">kubectl</a> 命令访问到。如果在本地测试，你需要在自己的本地环境下安装 <a href="https://kubernetes.io/docs/getting-started-guides/minikube/">minikube</a>。
+  <li>您必须要有一个 kubernetes 集群，支持的最低版本为1.6，并且要安装了 <a href="https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/">kube-dns</a> 并且能通过 <a href="https://kubernetes.io/docs/user-guide/prereqs/">kubectl</a> 命令访问到。如果在本地测试，你需要在自己的本地环境下安装 <a href="https://kubernetes.io/docs/getting-started-guides/minikube/">minikube</a>。
     <ul>
       <li>我们建议安装最新的 minikube 版本（本文档中使用的0.19.0版本），老版本中可能缺少一些必要组件。</li>
     </ul>
@@ -335,6 +334,15 @@ CMD SPARK_CLASSPATH="${SPARK_HOME}/jars/*" &amp;&amp; \
 <p>Spark 跟 Kubernetes 集群之间交互使用的是 fabric8 的 kubernetes-client library。</p>
 
 <p>当我们使用的是 fabric8  的 kubernetes-client 所不支持的认证机制时可以使用 <code>kubectl proxy</code>。它目前支持X509 Client Certs 和 OAuth tokens。</p>
+
+<h2 id="访问-driver-ui">访问 Driver UI</h2>
+
+<p>使用 <code>kubectl port-forward</code> 来访问 spark Driver 的 UI。</p>
+
+<pre><code class="language-bash">kubectl port-forward &lt;driver-pod-name&gt; 4040:4040
+</code></pre>
+
+<p>然后，通过 http://localhost:4040 访问。</p>
 
 <h2 id="动态-executor-scale">动态 Executor Scale</h2>
 
